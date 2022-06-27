@@ -224,14 +224,14 @@
       \fi
       {\if@sigpage\small\else\Large\fi
         \def\and{\!, Advisor\par\@sigline}
-        \@sigline\@advisor NAME, Advisor\par}
+        \@sigline\@advisor, Advisor\par}
       \vspace{\stretch{0.5}}
       {\if@sigpage\small\else\Large\fi
         \def\and{\! NAME, Reader\par\@sigline}
-        \@sigline\@reader NAME, Reader\par}
+        \@sigline\@reader, Reader\par}
       \vspace{\stretch{0.5}}
       {\large \scalebox{0.25}{\includegraphics{hmclogo}}\\[2ex]
-        \raisebox{36bp-0.5\depth}{\textsf{\textbf{Department of Mathematics and Physics \@department}}}}\par%
+        \raisebox{36bp-0.5\depth}{\textsf{\textbf{MSc Applied Data Science}}}\par {\textsf{\textbf{\@department}}}}\par%
       \vspace{8ex}
     {\large \@thesismonth, \@thesisyear\\[1em]}
 \end{center}
@@ -281,7 +281,7 @@
 \newcommand{\thesisyear}[1]{\gdef\@thesisyear{#1}}
 \newcommand{\@thesisyear}{2022}
 \newcommand{\thesismonth}[1]{\gdef\@thesismonth{#1}}
-\newcommand{\@thesismonth}{July}
+\newcommand{\@thesismonth}{July 11}
 
 %%% Define the text to appear on the copyright page.
 \newcommand{\@defaultCopyrightText}{%
