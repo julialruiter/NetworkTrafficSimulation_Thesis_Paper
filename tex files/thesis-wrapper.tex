@@ -5,7 +5,7 @@
 %\usepackage[pass]{geometry}
 %%% HEADER INFORMATION %%%
 
-\title{Network Traffic Simulator:  \\ Designing a flexible  Microscopic Traffic Management System using Python}
+\title{Network Traffic Simulator:  \\ Designing a (Semi-)Generalized Traffic Management System Using Python}
 \author{Julia Ruiter}
 \advisor{Yannis Velegrakis}
 \reader{Ioana Hulpis}
@@ -23,6 +23,24 @@
 \usepackage[toc,page]{appendix}
 \usepackage{float}
 \usepackage{amsmath}
+\usepackage{hyperref}
+
+\usepackage{alltt}   % alternate method for pretty code -- SUPPORTS BOLD
+\renewcommand{\ttdefault}{txtt}
+
+% \usepackage{listings}   % display python code nicely
+% \lstset{                 % allow verbatim to auto-line-break
+% basicstyle=\small\ttfamily,
+% columns=flexible,
+% breaklines=true
+% }
+% \lstset{language=Python}
+
+
+
+\usepackage{etoolbox}   % prevent bibliographies from splitting on pagebreak
+\apptocmd{\thebibliography}{\interlinepenalty 10000\relax}{}{}
+
 
 
 \newtheorem{thm}{Theorem}[chapter]
@@ -66,7 +84,7 @@
 
 %%% ACKNOWLEDGEMENTS.
 \begin{acknowledgments}
-I'm extremely grateful for my partner, Warren Fletcher, for all the support he has provided me (both professionally and emotionally) in the duration of both thesis and this entire master's program. He has given invaluable guidance in writing and designing a proper/professional piece of software, and has patiently helped fill in the gaps in my computer science knowledge, pointing me in the right direction for data structure and algorithm usage.
+I'm extremely grateful for my partner, Warren Fletcher, for all the support he has provided me (both professionally and emotionally) in the duration of both thesis and this entire master's program. He has given invaluable guidance in writing and designing a proper/professional piece of software, and has patiently helped fill in the gaps in my computer science knowledge, pointing me in the right direction for data structure and algorithm usage.  This project would not be possible without the many design debates and ensuing suggestions from him.
 \end{acknowledgments}
 
 %%% CONTENTS, FIGURES, TABLES
@@ -81,8 +99,14 @@ I'm extremely grateful for my partner, Warren Fletcher, for all the support he h
 
 % CHAPTERS %
 \input{tex files/Chapters/Introduction}
-\input{tex files/Chapters/Lorenz}
+\input{tex files/Chapters/Related_Works}
+\input{tex files/Chapters/Motivations}
+%\input{tex files/Chapters/Lorenz}
 \input{tex files/Chapters/Architechture_Diagram}
+\input{tex files/Chapters/User_Manual}
+\input{tex files/Chapters/Use_Cases}
+\input{tex files/Chapters/Next_Steps}
+\input{tex files/Chapters/Appendix_docstrings}
 
 %\end{comment}
 
@@ -95,6 +119,8 @@ I'm extremely grateful for my partner, Warren Fletcher, for all the support he h
 \nocite{*} % Show everything in bib file, not just things that are explicitly cited.
 \bibliography{bibliography}
 \bibliographystyle{alpha}
+
+
 %\printbibliography
 
 

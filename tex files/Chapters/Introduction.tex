@@ -1,1 +1,25 @@
 \chapter{Introduction}
+\label{Intro}
+
+\par Making your morning commute to the office by car, waiting for your online purchase to arrive days or weeks after ordering, using the Tor browser to access articles or sites not available in your country; these are systems of describing the movement of people, things, or information from point A to point B, with various levels of intervention or autonomy in the process.  Each of these situations isn't an action in isolation, but part of a larger system of units moving over an underlying infrastructure.  The purpose of this project is to create a framework that can model each of these systems and more. \\
+
+\par This generality is at odds with existing popular software for simulation modeling, which typically specialize in one particular network type to simulate (ex: urban car traffic) \cite{LWB18}.  Simulations built using these programs have a wealth of domain-specific knowledge and available parameters to tune.  However, this can become troublesome when one wants to extend the package to other network types but at the cost of being difficult to expand to other uses due to domain-specific dependencies, requiring users to be clever and create in overlapping various domain-specific models and packages to model other system types (ex:  adding NS2 to SUMO to model telecommunication protocols or mixed-mode travel) \cite{LC08} \cite{SKMR14}.  For a more detailed look at existing programs and related research, see \autoref{Related}, \textit{"\nameref{Related}"}.   \\
+
+\par The new Traffic Management system/simulation framework outlined in this paper aims to provide an alternative to this by being explicitly designed around the question:  \textit{How can one natively model the idiosyncrasies of a system without loss of generality in the underlying software?}  A detailed discussion on why particular design choices were made on the microscopic and macroscopic level can be found in \autoref{Motivations}, \textit{"\nameref{Motivations}"}, but the general guiding principles used for ensuring software generality and adaptability to various use-cases are:
+
+\begin{itemize}
+  \item \textbf{Top-Down}:  so much as possible, the system has been designed that information can only flow in one (consistent) direction.  This generally defers decision-making up to the user, ensuring that the system behaves as expected since elements can generally not control one another. 
+  \item \textbf{Modular}:  each component of the system is distinct and isolated.  Though an element may be dependent on another class, any functions pertaining to it's behavior are passed back down to the class it affects before updating.  This allows for further layers of abstraction or separation to be added (or removed) if necessary.
+  \item \textbf{Abstract}:  if a system can be designed such that a network simulation as a concept can be modeled, then the system should work for all subclasses of network simulation.  This means that a simulation should be possible on the most bare-bones version of a network/object system.
+  \item  \textbf{Consistent}:  subclasses have been ignored in this version of the software and should continue to be absent as much as possible.  Allowing for subclasses allows for use-case-specific functions to creeps into the code; by forcing functions to be general, you ensure the program is adaptable to use cases not yet considered.
+  \item \textbf{Attribute agnostic}:  as much as possible, object attributes should be non-essential; this follows from "Abstract".  Though a "default" configuration value has been set for essential variables, nearly all of the default values are set to the least-restrictive values possible.
+  \item \textbf{Accuracy over performance}:  though many calculations could be simplified by assuming fixed parameters, real-world systems are seldom consistent in practice.  By allowing each individual component the ability to have unique attributes, the user can build more complex and nuanced simulations.
+\end{itemize}
+
+It may be beneficial to the reader to consult \autoref{Uses}, \textit{"\nameref{Uses}"}, to better understand the motivations and see how this design logic is applied to each of the examples this chapter opened with.  \\
+
+\par As the software project this thesis refers to is open-source and still a work in progress, some of the details in \autoref{Manual}, \textit{"\nameref{Manual}"}, may become outdated as the project grows and evolves.  Anticipated additions in future versions and an outline for creating a UI interface can be found in \autoref{Future}, \textit{"\nameref{Future}"}.  The current version and place where user suggestions and contributions for additional features and implementations can be made can be found at:  
+\begin{verbatim}
+    https://github.com/julialruiter/Traffic_Simulator
+\end{verbatim}
+

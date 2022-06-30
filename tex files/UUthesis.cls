@@ -132,6 +132,7 @@
 
 %%% Set some defaults for bibliographic punctuation used by natbib.sty.
 \bibpunct[:~]{(}{)}{;}{a}{,}{,~} 
+\setcitestyle{square}
 
 
 %%% Define some environments.
