@@ -1,4 +1,55 @@
 \chapter{Design Motivations}
 \label{Motivations}
 
-\par 
+\par Being a mathematician and not a programmer, I wanted as general of a solution as possible to creating an extensible and multi-use simulation model.  After all--if one can prove that the generalized solution works, then any special case should, too.  So I set out redefining the problem of traffic simulation from a data structures and storage problem to one of pure graph theory and combinatorics. \\
+
+\par  However, it wasn't very long before I was forced to face the fact that computers do not quite work like that, and computers require a bit more work to conform to the natural mathematics of graph theory.  While computers force discreteness, I aimed to design a simulation system which could mimic real-world continuity as closely as possible.  With that as the utmost goal, the system was designed as follows: \\
+
+\section{Network Structure}
+\par At least my computer and I could agree on one thing from the start:  traffic simulation is a graph problem.  Intuitively, nodes are connection points for several edges, like road intersections, cellular towers, etc.  By utilizing graph data structures, one can also take advantage of the numerous existing path-finding algorithms and easily keep track of connected pair of nodes (and their directionality). \\
+
+\par Further continuing with intuitive design decision, it followed that the network needed to be directional, and that multiple parallel edges between a pair of nodes should be allowed.  Directionality's reason is easy to sport:  car lanes force traffic in a particular direction, and packets of information cannot necessarily be transmitted in both directions (especially if there are intermediary steps, like encryption, that are not reversible). \\  
+
+\par Redundancy is a bit trickier, but ensures that this traffic simulator has the flexibility to model microscopic and macroscopic traffic trends \cite{LWB18}.  Allowing for multiple parallel edges is a good way to increase (or restrict) edge capacity, and serves as another parameter the user can tune to mimic real-world constraints.  Using normal cummuting traffic as an example, a user can test whether or not adding another lane to a freeway (or adding lane accessible to cars only of a certain type) would ease congestion as they are able to view metrics and positionality per timestamp of the entire system (macroscopic), the set of edges between two nodes or each individual node (mesoscopic), and the individual cars on those roads themselves (microscopic) \cite{LWB18}. \\
+
+% PLACEHOLDER for descriptive graphic
+
+\par Though some traffic simulations in existence use adjacency matrices to define neighbouring nodes \cite{GPK02}, this is not a scalable, nor desirable, solution.  While adjacency matrices are intuitive for humans to read and understand, since most networks are fairly sparse they end up storing a lot of NULL values.  While little heed is paid to memory conservation in the rest of this simulation's design process, the idea of holding space for nonexistent edges did not seem like a very good idea.  Instead, it makes sense to think more about the interactions of node-edge sets.  Adjacency matrices acknowledge that an edge is defined by its originating and terminal nodes, but fails to demonstrate how a node is only interesting because of the set of inbound and outbound edges it connects.  To capture both of these ideas, I used dictionary mappings to identify and link nodes to edges and edges to nodes, allowing either or both interactions to be utilized, depending whichever one was more intuitive for the particular action being done at any point in the simulation process.\\
+
+% PLACEHOLDER for descriptive table
+
+\section{"You Are Here"}
+
+\par A traffic simulation is not very insightful withough considering the things which themselves cause traffic--Who, or what, keeps track of where the "cars" are?  Though innocuous, the question leads to some philosophical fancies that need to be addressed before determining who (or what) is in charge of your position. \\
+
+\par If you're driving home at midnight, you might choose to take a faster route or a more scenic route, you might pull over to look at the citylights or take a pause because you're feeling sleepy, or you might drive a bit over the speed limit up because there's not likely to be any cops on the road at this hour of night.  It feels like you own the road and you have full control over where you are right here right now.  \\
+
+\par But what if you (are trying to) drive home 5 o'clock Friday in the thick of traffic?  Yes, you \textit{chose} to take a particular route home, but now you're stuck in bumper-to-bumper traffic and can't move forward til the car in front of you decides to (or can at all).  While you may be in control of your car, you don't have full control over your ability to move, and thus over your position.  This leads to the inevitable conclusion that a simulation will be most accurate if the network controls the cars rather than letting the cars control themselves, meaning that current position must be stored on the objects over which the cars are moving:  the edges.
+
+\section{...But where, exactly, is "Here"?}
+
+\par Since edges store car locations and move them along a particular distance each unit of time, it's tempting to think of positions in terms of capacity.  If an edge is 10 units long and cars travel 2 units per time, there are 5 positions a car can be, so a car's position can be stored as its index in the capacity queue.  This makes movements easy to simulate and requires a minimal, fixed storage space no matter the amount of cars on the network.  So this is that design choice, right? \\
+
+\par ...well, not quite.  Sure, the example above is easy to quantify, but breaks down when situations arise that obstruct predictable movement, ranging from traffic jams to even just switching to an edge with a different speed limit.  If a car is unable to move its full potential, it's then unable to move into the next discrete state.  So where does it go? And where do any cars after it go? \\
+
+\par The problem with defining position by the distance a car can go at it's maximum speed is that there's a lot of unaccounted distance.  If a car is going 10 m/min, then the position would be defined as 10 meters later (if the unit time distance of the simulation were in minutes)--in a road stretch of 60 meters, there would be 6 possible positions.  \\
+
+% PLACEHOLDER for descriptive graphic:  before, obstruction, after
+
+\par Now let's say that the car (car A) has reached the end of the road segment and is trying to turn onto a crossroad, but the crossroad is completely full.  Car A must stop at the end of the road segment and wait for an opening.  The car behind (car B), meanwhile, is still driving 10 m/min but must stop before crashing into the halted car in front, but any cars behind it are still capable of moving fully into the next position in the queue.  Where is Car B?  It cannot be in the final position (as Car A is still occupying it), and the penultimate position is now taken up by Car C which was one position behind Car B.\\
+
+% PLACEHOLDER for descriptive graphic:  obstruction, after
+
+\par Faced with this situation in a discrete system, we must compromise on simulation accuracy:  either you allow cars to pile up on positions (defeating the purpose of a queue \textit{and} unrealistically depicting car location), or you prevent cars from moving at all (artificially causing traffic on the current edge when there is, in fact, room to move.  This cascades onto other connected edges and may stall the whole simulation).  While option one doesn't seem too terrible, it runs the risk of allowing cars to "jump" over halted cars; if car C's destination is the location car A is stuck, then when car C piles onto the position two timestamps later, it registers as completing its journey despite that being impossible in a real-world scenario.  \\
+
+\par It is clear that some other solution is needed if a realistic simulation is to be created.  And that solution is simple:  switch to floating point positions.  By mapping cars to their exact position from 0 to maximum edge length, the user can be explicit about how long each car is and how close the cars are allowed to be to each other, all the while ensuring accuracy in car behavior by preventing skipping.
+
+
+\section{Paths, Origins, and Destinations}
+
+\par "How do I get from Point A to Point B?" and what even constitutes a "point"?  Path-finding algorithms typically find the fastest/shortest/"best" route between any 2 given nodes, which would imply that nodes are the points. This intuitively makes sense and works great for simulation paths with bounded, real-world constraints.  Take (a very simplified example of) email communication:  emails will always start at one machine (node), travel to a server (node), and perhaps be passed onto another server for the receiver to view (node); there might be more or less steps between each landmark, but the only way the message can get lost as at one of the endpoints.  \\
+
+\par However, cars do not spawn in the middle of a four-way intersection, nor does it make sense to create a network model where every possible parallel parking spot is a separate node in a network.  For one, someone could do a terrible parking job and take up two spots, therefore creating some new start or end node somewhere between the existing spots.  But the more pressing issue with breaking a road into n continuous, sequential, connected segments is the same sort of unwanted inefficiency as the adjacency matrices proposed earlier:  there's a lot space and computation wasted on pairs that generally provide no function to the simulation. \\
+
+\par This led me to turn the usual graph structure on its head, and instead allow cars to enter and leave the network from the edges themselves.  To make this work for traditional node-to-node paths, the car placement mechanism has been written in such a way that if no specific edge location has been specified for a start and end point, a path is selected based on those nodes and the "car" is placed at position 0 along the first edge (and finishes its journey at the maximum length of the final edge, or effectively at the terminal node).
+

@@ -1,15 +1,53 @@
 \chapter{Appendix}
 \label{Appendix}
 
-\par This sections contains excerpts from the Network Traffic Simulator code.  The version you see here is the complete documentation for version 1.0.0, released  1 July 2022.  \\
+\par This sections contains excerpts from the Network Traffic Simulator code and an overview of the system this software was created and tested on.  The version you see here is the complete documentation for version 1.0.0, released  1 July 2022.  \\
 
-\noindent The features were created to meet (and exceed) the requirements and expectations set  by Universiteit Utrecht staff and serves as a graduation thesis project for their MSc Applied Data Science program.  This release, while a bit barebones on the generator side, sets up a complete, adaptable framework for urban traffic simulations (and other use cases!). \\
+\noindent The features found in this version were created to meet (and exceed) the requirements and expectations set  by Universiteit Utrecht staff and serves as a graduation thesis project for their MSc Applied Data Science program.  This release, while a bit barebones on the generator side, sets up a complete, adaptable framework for urban traffic simulations (and other use cases!). \\
 
 \noindent Please check the repository below for the latest instantiation:
 \begin{verbatim}
     https://github.com/julialruiter/Traffic_Simulator
 \end{verbatim} 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%---------------------------------------------------------------%
+\section{Dependencies}
+So much as possible, libraries have been kept to the standard Python libraries.  This means that the current Network Traffic Simulator software version has no external dependencies.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%---------------------------------------------------------------%
+\section{System Specifications}
+This software was created and tested on a machine with the following specifications.  Though no official stress-testing has been done for this publication, this information may be relevant in analyzing any metrics reported in follow ups: \\
+
+\begin{center}
+    \noindent \begin{tabular}{l l}  %{>{\bfseries}l p{6cm}}
+    \toprule
+    \textbf{OS Name} & Microsoft Windows 10 Home\\
+    \midrule
+    \textbf{OS Version} & 10.0.19044 N/A Build 19044\\
+    \midrule
+    \textbf{OS Configuration} & Standalone Workstation\\
+    \midrule
+    \textbf{OS Build Type} & Multiprocessor Free\\
+    \midrule
+    \textbf{OS Build Type} & Multiprocessor Free\\
+    \midrule
+    \textbf{System Manufacturer} & ASUSTeK COMPUTER INC.\\
+    \midrule
+    \textbf{System Model} & VivoBook\_ASUSLaptop X521EA\_S533EA\\
+    \midrule
+    \textbf{System Type} &  x64-based PC\\
+    \midrule
+    \textbf{Processor} & Intel64 Family 6 Model 140 \\
+    & Stepping 1 GenuineIntel ~2803 Mhz \\
+    \midrule
+    \textbf{Installed RAM} & 16.0 GB (15.7 GB usable)\\
+    \bottomrule
+    \end{tabular}
+\end{center}
+ \\
+ 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %---------------------------------------------------------------%
 \section{API Module: Traffic.py}
@@ -111,8 +149,8 @@ This module creates and runs an instance of a Network object when a simulation i
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %---------------------------------------------------------------%
 \subsection{class Network:}
-\begin{alltt}
 
+\begin{alltt}
 \textbf{__init__}(self, TrafficManagerPointer, config) -> None
 Contains all functions and attributes pertaining to the (road) 
 network as a whole.
@@ -236,8 +274,8 @@ that of a global tick/no further movement is possible.}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %---------------------------------------------------------------%
 \subsection{class Node:}
-\begin{alltt}
 
+\begin{alltt}
 \textbf{__init__}(self, Network_reference, id, intersection_cost,
 stoplight_pattern, stoplight_duration, stoplight_delay) -> None
 Contains all functions and attributes pertaining to a network 
@@ -323,42 +361,36 @@ increment will be solved in future versions.
 Communication to prevent cars from leaving inbound Edges during 
 the node tick will be established in future versions.
 
-
-
 \end{alltt}
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %---------------------------------------------------------------%
 \subsection{class Edge:}
-\begin{alltt}
 
+\begin{alltt}
 \textbf{__init__}(self, id, start_node_id, end_node_id, edge_length,
 max_speed, max_capacity) -> None
-Contains all functions and attributes pertaining to a road segment 
-(Edge).
+Contains all functions and attributes pertaining to a road 
+segment (Edge).
 Attributes:
     \textbf{id}:  Unique ID associated with this Edge object.
-    \textbf{start_node_id}:  Node from which this Edge originates (this Edge 
-    is an outbound_edge for start_node).
-    \textbf{end_node_id}:  Node from which this Edge terminates (this Edge is 
-    an inbound_edge for end_node).
+    \textbf{start_node_id}:  Node from which this Edge originates (this
+    Edge is an outbound_edge for start_node).
+    \textbf{end_node_id}:  Node from which this Edge terminates (this 
+    Edge is an inbound_edge for end_node).
     \textbf{start_node}:  Node object represented by start_node_id.
     \textbf{end_node}:  Node object represented by end_node_id.
-    \textbf{edge_length}:  Physical length of the Edge (ex: meter length of 
-    a road).
-        default value can be found and adjusted at
-        edge_default_config["edge_length"]
-    \textbf{max_speed}:  (optional) Unit speed limit of the road.  Without
-    obstructions, this is the maximum distance a Car can move on this 
-    Edge in one tick.
-        Default value can be found and adjusted at
-        edge_default_config["max_speed"]
+    \textbf{edge_length}:  Physical length of the Edge (ex: meter length
+    of a road).  Default value can be found and adjusted at
+    edge_default_config["edge_length"]
+    \textbf{max_speed}:  (optional) Unit speed limit of the road.  
+    Without obstructions, this is the maximum distance a Car 
+    can move on this Edge in one tick.  Default value can be 
+    found and adjusted at edge_default_config["max_speed"]
     \textbf{max_capacity}:  (optional) Maximum number of Car objects
-    allowed on the Edge (max length of current_cars).
-        default value can be found and adjusted at
-        edge_default_config["max_capacity"]
+    allowed on the Edge (max length of current_cars). Default 
+    value can be found and adjusted at 
+    edge_default_config["max_capacity"]
     \textbf{edge_car_ID_to_car}:  Dictionary containing all Car objects
     associated with the Edge; maps Car IDs to Car objects.
     \textbf{current_cars}:  List of IDs of all Cars currently on the Edge.
@@ -373,7 +405,8 @@ Attributes:
 that the user did not provide them.}
 
 \textbf{add_car_to_wait_queue}(self, car)
-Adds Car object to the waiting queue and links Car to Edge on Car ID.
+Adds Car object to the waiting queue and links Car to Edge on Car 
+ID.
 
 \textbf{get_current_cars}(self)
 Returns self.current_cars, the list of Car IDs for all cars 
@@ -408,9 +441,8 @@ Used when calling value from outside the Edge class.
 
 \textbf{get_snapshot}(self)
 Outputs dictionary of Edge attributes, including lists of Cars 
-that are:
-currently on the Edge, waiting to enter the Edge, or completed 
-their trip on this Edge.
+that are:  currently on the Edge, waiting to enter the Edge, or 
+completed their trip on this Edge.
 
 \textbf{get_start_node}(self)
 Returns self.start_node Object.
@@ -448,8 +480,6 @@ self.id = Car.end_edge.
 far as possible (maximum potential distance, edge end, or until 
 obstructed by another car).
 
-
-
 \end{alltt}
 
 
@@ -457,11 +487,265 @@ obstructed by another car).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %---------------------------------------------------------------%
 \subsection{class Car:}
+
 \begin{alltt}
-
-\textbf{__init__}(self, TrafficManagerPointer, config) -> None
-Contains all functions and attributes pertaining to the (road) 
-network as a whole.
+\textbf{__init__}(self, car_ID, car_length, start_edge, start_pos_meter,
+end_edge, end_pos_meter, path, car_type, route_preference,
+max_tick_potential) -> None
+Contains all functions and attributes pertaining to an object 
+traversing the Network (Car).
 Attributes:
+    \textbf{id}:  Unique ID associated with this Car object.
+    \textbf{car_length}:  Physical unit length of the Car object 
+    (ex: meters).  May be 0.
+    \textbf{start_edge}:  Edge from which this Car originates 
+    its journey.
+    \textbf{start_pos_meter}:  Unit position along start_edge 
+    from which the Car begins its journey.  
+    Edge origin = position 0.
+    \textbf{end_edge}:  Edge from which this Car terminates its 
+    journey.
+    \textbf{end_pos_meter}:  Unit position along end_edge at 
+    which the Car terminates its journey and leaves the Network.
+    \textbf{path}:  Ordered list of Edges that the Car will 
+    traverse to get from start to end.
+    \textbf{route_preference}:  Classification determining 
+    which type of path will be followed:
+        if \textbf{'Fastest'}: chooses path with minimum total 
+        travel time (assuming no congestion).
+        if \textbf{'Shortest'}: chooses path with shortest total 
+        distance in terms of length.
+        if \textbf{'Random'}:  pays no heed to metrics and 
+        instead chooses an available path at random.
+    \textbf{car_type}:  Car classification for path-following:
+        if \textbf{'Static'}:  Car follows predetermined path 
+        set on addition.
+        if \textbf{'Dynamic'}:  Car will recalculate its route 
+        every time it reaches a Node. 
+    \textbf{mobile}:  Car classification for mobility:
+        if \textbf{True}:  Car is eligible to move (default).
+        if \textbf{False}:  Car has been halted and will not move 
+        until further instructions given.
+    \textbf{route_status}:  string explaining the Car's status 
+    with regards to path completion:
+        \textbf{'In progress'}:  The Car is eligible for movement; 
+        the Car is moving along its path.
+        \textbf{'Route Completed'}:  The Car has reached its 
+        destination and has been removed from the Network.
+        \textbf{'Paused'}:  The Car is ineligible for movement 
+        due to mobile=False.
+        \textbf{'Removed from simulation at tick #n'}:  The Car 
+        was removed from the simulation by external intervention.  
+        n denotes timestamp at which it was removed.
+    \textbf{current_edge}:  Edge ID corresponding to the Car's 
+    current location.
+    \textbf{current_pos_meter_car_front}:  Unit distance along
+    current_edge corresponding to the Car's current location.  
+    If car_length > 0, this refers to the position of the front 
+    of the Car.
+    \textbf{max_tick_potential}:  Proportion of global maximum 
+    tick time-distance that the Car is eligible to move 
+    (default = 1, full potential).
+    \textbf{current_tick_potential}:  Portion of tick 
+    time-distance that the car has not (yet) utilized on this 
+    tick.
 
+\textbf{get_car_ID}(self)
+Returns self.id.
+Used when calling value from outside the Car class.
+
+\textbf{get_car_length}(self)
+Returns self.car_length.
+Used when calling value from outside the Car class.
+
+\textbf{get_car_type}(self)
+Returns self.car_type.
+Value is \textbf{"Static"} (Car remains on its original path) or \textbf{"Dynamic"}
+(Car recalculates path at every Node crossing).
+Used when calling value from outside the Car class.
+
+\textbf{get_current_edge}(self)
+Returns self.car_length.
+Used when calling value from outside the Car class.
+
+\textbf{get_current_pos_meter_car_front}(self)
+Returns self.current_pos_meter_car_front.
+Used when calling value from outside the Car class.
+
+\textbf{get_current_tick_potential}(self)
+Returns self.current_tick_potential.
+Used when calling value from outside the Car class.
+
+\textbf{get_end_edge}(self)
+Returns self.end_edge, the Edge at which the Car finishes its 
+route and leaves the Network.
+Used when calling value from outside the Car class.
+
+\textbf{get_end_pos_meter}(self)
+Returns self.end_pos_meter, the position on the Edge at which 
+the Car finishes its route and leaves the Network.
+Used when calling value from outside the Car class.
+
+\textbf{get_max_tick_potential}(self)
+Returns self.max_tick_potential.
+Used when calling value from outside the Car class.
+
+\textbf{get_mobility}(self)
+Returns self.mobile.
+Value is \textbf{True} (Car is eligible to move) or \textbf{False} 
+(Car is halted or its path is complete).
+Used when calling value from outside the Car class.
+
+\textbf{get_path}(self)
+Returns self.path, the ordered list of upcoming Edges the Car
+will traverse.
+Used when calling value from outside the Car class.
+
+\textbf{get_route_metric}(self)
+Returns self.route_preference.  Used when a Car's path needs 
+to be (re)calculated.
+Value is "Shortest", "Fastest", "Random", with "Random" being 
+the default value if none specified.
+Used when calling value from outside the Car class.
+
+\textbf{get_route_status}(self)
+Returns self.route_status.
+Value is "In progress", "Route Completed", "Paused", or 
+"Removed from simulation at tick #n".
+Used when calling value from outside the Car class.
+
+\textbf{get_snapshot}(self)
+Outputs dictionary of Car attributes.
+
+\textbf{get_start_edge}(self)
+Returns self.start_edge, the Edge at which the Car entered 
+the Network.
+Used when calling value from outside the Car class.
+
+\textbf{get_start_pos_meter}(self)
+Returns self.start_pos_meter, the position on the start Edge 
+at which the Car entered the Network.
+Used when calling value from outside the Car class.
+
+\textbf{set_current_edge}(self, edge_ID)
+Replaces self.current_edge with edge_ID.
+Used when updating value from outside the Car class.
+
+\textbf{set_current_pos_meter_car_front}(self, new_position_meters)
+Replaces self.current_pos_meter_car_front with 
+new_position_meters.
+Used when updating value from outside the Car class.
+
+\textbf{set_current_tick_potential}(self, new_potential)
+Replaces self.current_tick_potential with new_potential.
+Used when updating value from outside the Car class.
+
+\textbf{set_mobility}(self, Boolean)
+Updates the Boolean value of self.mobile to input Boolean.
+Value is \textbf{True} (Car is eligible to move) or \textbf{False}
+(Car is halted or its path is complete).
+Used when updating value from outside the Car class.
+
+\textbf{set_path}(self, new_path_list)
+Replaces self.path with new_path_list, 
+typically removing the first entry as the car enters a new Edge, 
+or when calculating a new route.
+Used when updating value from outside the Car class.
+
+\textbf{set_route_status}(self, new_string)
+Updates self.route_status to new_string.
+Value should be "In progress", "Route Completed", "Paused", or 
+"Removed from simulation at tick #n".
+Used when updating value from outside the Car class.
+
+\textbf{tick}(self, old_potential)
+Calculates "potential" differential;
+This is the portion of a full tick movement completed by the 
+Car on this tick.
+
+\end{alltt}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%---------------------------------------------------------------%
+\section{Optional Module:  \\ UnderlyingNetworkGenerator.py}
+In the absence of a pre-made graph to run the simulation on, the user can elect to use this module to generate a network.  This method of Netowrk generation may be useful for some particular use cases where it is beneficial to create a graph with many Nodes and Edges sharing the same properties.\\
+
+\noindent The current version of this module supports the creation of Erdős-Renyi random graphs OR complete, bidirectional graphs.  This module will be improved later to support other mathematical network types.
+
+\subsection{class NetworkGenerator:}
+
+\begin{alltt}
+\textbf{__init__}(self) -> None
+Class containing various functions for generation Network objects 
+for the simulation to run on.
+A Network can also be provided via custom JSON file instead.
+
+\textbf{create_ER_network_default_values}(self, number_nodes,
+probability_joining=0.5)
+Creates an Erdos Renyi Network based on the given parameters:
+A each pair of nodes has a probability_joining (0 < p < 1) of 
+being connected in an ER Network.
+As this is a directional Network, each pair will be considered 
+separately per direction.
+This Network uses the following default values:
+    probability_joining = 0.5     # can be overwritten by input
+    node.intersection_time_cost = 0
+Please note that this NetworkGenerator function only generates 
+the barebone structures necessary for a Network. 
+All additional attributes will be loaded via
+"DEFAULT_edge_values_config.json" during the simulation process.
+
+\textbf{generate_complete_bidirectional_network_default_values}(self,
+number_nodes)
+Generates a complete Network consisting of number_nodes Nodes, 
+each connected to every other Node in both directions.
+This Network uses the following default value:
+    node.intersection_time_cost = 0
+Please note that this NetworkGenerator function only generates 
+the barebone structures necessary for a Network. 
+All additional attributes will be loaded via
+"DEFAULT_edge_values_config.json" during the simulation process.
+output_Network_dictionary(self, node_dict, edge_dict)
+Returns dictionary containing all Node and Edge information for 
+the newly generated Network.
+
+\end{alltt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%---------------------------------------------------------------%
+\subsection{class GeneratorNode:}
+
+\begin{alltt}
+\textbf{__init__}(self, id) -> None
+Contains all attributes necessary for creating a network 
+intersection (Node).
+Attributes:
+    id:  Unique ID associated with this Node object.
+    intersection_time_cost:  Value representing time in ticks 
+    required to cross intersection.  0 <= value < 1.
+\end{alltt}
+
+
+%-----------------------------------------------------------------%
+\subsection{class GeneratorEdge:}
+
+\begin{alltt}
+\textbf{__init__}(self, id, start_node_id, end_node_id, edge_length=None,
+max_speed=None, max_capacity=None) -> None
+Contains all attributes necessary for creating a road segment 
+(Edge).
+Attributes generated in all NetworkGenerator functions:
+    \textbf{id}:  Unique ID associated with this Edge object.
+    \textbf{start_node_id}:  Node from which this Edge originates.
+    \textbf{end_node_id}:  Node from which this Edge terminates.
+Attributes generated only in probabilistic NetworkGenerator 
+functions:
+    \textbf{edge_length}:  Physical length of the Edge (ex: meter length 
+    of a road).
+    \textbf{max_speed}:  (optional) Unit speed limit of the road.  
+    Without obstructions, this is the maximum distance a Car 
+    can move on this Edge in one tick.
+    \textbf{max_capacity}:  (optional) Maximum number of Car objects
+    allowed on the Edge.
 \end{alltt}
