@@ -5,7 +5,7 @@
 
 \noindent The features found in this version were created to meet (and exceed) the requirements and expectations set  by Universiteit Utrecht staff and serves as a graduation thesis project for their MSc Applied Data Science program.  This release, while a bit barebones on the generator side, sets up a complete, adaptable framework for urban traffic simulations (and other use cases!). \\
 
-\noindent Please check the repository below for the latest instantiation:
+\noindent Please check the project's repository (below) for the latest instantiation:
 \begin{verbatim}
     https://github.com/julialruiter/Traffic_Simulator
 \end{verbatim} 
@@ -356,8 +356,6 @@ Toggles which Edges allow cars to exit by cycling through sets
 in stoplight_pattern.
 Returns the set of which inbound Edge set in stoplight_pattern is
 currently active, or NULL set (denoting red lights for all edges).
-Communication to TrafficManager to establish global tick and 
-increment will be solved in future versions.
 Communication to prevent cars from leaving inbound Edges during 
 the node tick will be established in future versions.
 

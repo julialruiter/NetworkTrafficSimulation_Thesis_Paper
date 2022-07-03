@@ -1,2 +1,53 @@
 \chapter{Next Steps}
 \label{Future}
+
+\par As this is the first version of the Network Traffic Simulator software, there are several aspects that can be added or improved upon in successive iterations.  Some features are already hinted at in the code itself with placeholder functions, and others don't involve the existing code at all.  This version succeeded in building a functional and extensible traffic simulator that, due do its modularity, can be easily tweaked and expanded by users or future contributors.  Generally, the improvements fall into three categories:  software improvements, feature expansion, and creating a visualizer.
+
+\section{Software Improvement}
+
+\par software design-wise, the system is solid in that its logic is predictable and airtight, and that the system is extensible.  However, there are still many changes that can be made to improve the simulator, particularly in terms of computational complexity.
+
+\begin{enumerate}
+    \item \textbf{Subclasses}:  Though the use of subclasses is at odds with the design considerations outlined earlier in the paper, the current use of \textbf{if} statements to check for particular properties is not completely in line with the principle of extensibility.  To remedy this, the use of subclasses should be considered for nodes (stoplights/none) and for cars (static versus dynamic path-following).
+    \item \textbf{Tick processing}:  Currently, each tick cycle processes all cars on every single node and edge in the network, and cycles are repeated until no mar cars move.  This means that the edges without cars are checked on each pass, and cars that are immobile or finishes moving for the timestamp are checked with each network tick cycle.  At the cost of increasing memory complexity to store extra variables and statuses, some drastic improvements in computational complexity can be made by doing so.
+    \item \textbf{Logs instead of prints}:  While the two status messages printed per tick are beneficial for debugging and analyzing short simulations, they clutter the terminal and bury other print statements (like Exceptions) that may be more important.  The next version will include an option for the user to toggle which kinds of print statements they want to see (car additions, car trip completitions, tick data, etc) and specify a log file to dump them to.
+\end{enumerate}
+
+
+\section{Feature Expansion}
+
+\par Building on the existing framework, the following features can and should be added to future releases:
+
+\begin{enumerate}
+    \item \textbf{Remove Node/Edge}:  While the simulator currently supports the addition of nodes and edges into a running simulation, there is only a placeholder for removal so far.  This was due partly in the interest of time, but also due to the question of how cascading effects should be handled:
+        \begin{itemize}
+            \item If an edge is removed, what happens to the cars that were on that edge or waiting to enter the network along that edge? 
+            \item What about if a node is removed?  Should this remove all inbound and outbound edges associated with the node?
+            \item Should cars lost in the removal be flagged with the generic "Removed from the simulation at X' status, or would something else provide more insight to the users?
+            \item Should removed edges be catalogued like removed cars are?
+        \end{itemize}
+    Ideally, other users should be surveyed for input before any solution is proposed.
+    \item \textbf{Stoplights}:  Currently stoplight change logic is available in the \textbf{traffic\_network} module and it defines the active stoplight setting as the set of edges currently allowing cars to exit.  However, this logic has not yet been activated during the node tick process.  Before adding a check for stoplight presence and status, additional input is requested from users whether the existing stoplight state (at the node level) makes sense at all.
+    \item \textbf{Smarter path calculations}:  The current software version includes the option to select the best route based on shortest completion time in normal circumstances, but does not include any option for recalculating around traffic jams/congestion.  This is done somewhat on purpose as a PhD student my supervisor is working with is creating reinforcement learning models that identify these (literal) roadblocks and circumvent them.  Additionally, before a "Fastest\_now" calculation can be created, a more consistent and intuitive metric for congestion levels is needed.
+    \item \textbf{Congestion Metric}:  Currently there exists a proxy for network congestion levels (it's the "Percent of available energy used on tick" print statement for each tick call to the \textbf{Traffic} module.  While it would be simple to consider the used energy metric per individual edge, there is not enough evidence (yet) that this is a useful or insightful metric.  We must consider the following:
+        \begin{itemize}
+            \item Currently congestion is considered in terms of total energy consumption and on the network level.  But would it make more sense to report on the car level (the number of individual cars that were able to move their full distance, the number that were stuck at a complete standstill, and/or the average tick potential used by cars that used some in-between amount)?
+            \item Or should congestion be considered as the average of edge-level congestion?
+            \item Are we even on the right track associating congestion with movement potential?  Perhaps we should define it in terms of the ability of a new car to enter the network:  What is the available remaining capacity per edge?
+        \end{itemize}
+\end{enumerate}
+
+
+\section{Visualization}
+
+\par Currently, the only way a user can view the output of a simulation is by saving and viewing snapshots.  These snapshots were explicitly designed to be used for generating a simulation visualization, but the visualizer itself was not yet created due to time constraints.  Below is a proposal for building a visualizer:
+
+\begin{itemize}
+    \item \textbf{Simulation precision}:  As the simulation runs in discrete tick intervals, it makes sense to update the visualization with each tick, which can be done by utilizing the "get\_snapshot" function already created for this purpose.  While this does not create a continuous simulation, true continuity is not achievable due to the code design.  However, continuity can be approximated by using animations to transition the image from one tick state to the next.
+    \item \textbf{Snapshot deltas}:  In the current version of the code, you can find a placeholder function labeled "get\_snapshot\_deltas", which would report only the \textit{differences} between one snapshot and the next (rather than dump data for the entire network).  Creating this function would allow a much smaller file to be sent to whatever server would host the visualizer, though is entirely non-essential for local instances or small simulations.
+    \item \textbf{Implementation}:  Because the visualizer will be built from the snapshot json files, the language that the visualizer is written in doesn't need to match the simulator.  Instead, we can use JavaScript to take advantage of the \textbf{vis.js} library or \textbf{D3.js} library, each specifically written to display (dynamic) graphs.
+        \begin{itemize}
+            \item vis.js provides simple graphs off the bat.  While it doesn't seem like it (easily) supports the ability to add objects (cars) to the edges, you can change the displayed elements to reflect attributes weights.  This would allow you to create a visualization displaying congestion, where the thinkness of the edge between two nodes is proportional to congestion.  This can be beneficial for visually isolating traffic bottlenecks. D3.js appears very much the same.
+            \item Another option for simulations based on real-world geographic data is to utilize the ArcGIS API.  While this does not solve the issue of displaying cars on the network, it does accurately reflect the relative relations and distances between and two nodes, whether they are connected or not.
+        \end{itemize}
+\end{itemize}

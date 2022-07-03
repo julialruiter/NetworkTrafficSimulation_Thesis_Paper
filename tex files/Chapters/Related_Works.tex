@@ -1,5 +1,12 @@
 \chapter{Existing Traffic Simulation Models}
 \label{Related}
 
-\par The majority of popular open-source network modeling software focus explicitly on single network types.  SUMO is used for detailed urban traffic simulations for physical 
-(like SUMO, of NS2) focus specifically on 
+\par The majority of popular open-source network modeling software focus explicitly on a single network type.  For example, SUMO is an absolute beast of a simulation tool for tackling urban traffic simulations, making it the de-facto simulator used for mobility problems (IEEE eXplore notes nearly 500 citations for the program's inaugural conference paper).  But because of its dependence on geographic location, its use cases cannot be abstracted out \cite{LWB18}.  \\
+
+\par This means that even similar network problems like pedestrian mobility on the same network, simulating truckers who communicate with one another on the same network, or allowing an individual to move from one type of transportation to another require the additional use-case-specific packages and simulators to run on top \cite{NAHRI2021469}, \cite{LWB18}, \cite{SKMR14}. The intersection of traffic and mobility (as in the aforementioned adaptations to SUMO) has resulted in an entire genre of simulators called VANET (Vehicular Ad-Hoc Network).  However, VANET simulations cannot be evaluated directly by SUMO nor the appended packages, thus requiring yet another set of simulation packages to run on top of SUMO \cite{LC08}.\\ 
+
+\par Of course, the same network traffic systems outlined above can be modeled outside of the SUMO environment entirely.  Far preceding the creation of SUMO, papers on trucking and transport simulations can be found dating back to the '90s, even using programs like Microsoft Excel to run them \cite{Dag94}. This leads us to question whether SUMO's painstakingly created attributes and dependencies are even necessary for spinoff simulations. \\
+
+\par To see an example of a more generalized framework in action, we can look at the NS2 software which was designed explicitly for the simulation and assessment of computer communication networks.  The user manual "Introduction to Network Simulator NS2" details how to use the system for an extensive variety of communication-based simulations it supports have grown extensively in the 30+ years of its existence \cite{IH11}.  Because it is a solid base for simulations where objects may talk with one another, it has seen use beyond its original scope (including many uses in conjunction with SUMO \cite{LWB18}). \\
+
+\par Taking inspiration from the detail of SUMO and the flexibility of NS2, this project aims to create a self-contained simulation environment that can handle a range of use-cases (provided the user has adequate configuration data available).
