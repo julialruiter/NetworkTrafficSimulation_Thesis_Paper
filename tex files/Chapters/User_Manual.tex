@@ -1,4 +1,210 @@
-\chapter{Package User Manual}
+\chapter{User Manual}
 \label{Manual}
 
-\par 
+\par This chapter illustrates how the traffic simulator software works by guiding the reader through one hypothetical road-traffic simulation step by step in sections 5.1 through 5.5.  Though automotive traffic is used for the example case, instances where the given car simulation may differ from other types of network simulations have been highlighted. \\
+
+\section{Define the scope of the simulation}
+
+\par The details of setting up the simulation depend on several factors:
+
+\begin{enumerate}
+    \item What type of network system is being modeled?
+    \item What is the goal of the simulation? 
+    \item What types of objects traverse the network?  Are the uniform?
+    \item What data is already available to create the simulation?  If none, what do we know about the system?
+    \item What changes or additions need to be made to a basic network structure to model the idiosyncrasies of the network or desired observations?
+    \item How long will the simulation run?  Or how what criteria needs to be met before the simulation is complete?
+\end{enumerate}
+
+\noindent For our walkthrough example, the answers might look like the following:
+
+\begin{enumerate}
+    \item A province's road network.  Some roads are one-way, and some roads have multiple lanes per direction.
+    \item  We want to analyze if adding more highway lanes reduces traffic during rush hour.
+    \item Cars and shipping trucks share the road.
+    \item There is geospatial data available for city roads (in csv format).  However, there is only one lineitem per named road segment.  We don't have car data, but we know that during the daily rush hour period around 8000 cars travel northbound.
+    \item Trucks tend to go 10\% slower than the speed limit.  Everything else seems normal or standard enough. 
+    \item We want to observe the simulation for a window of time 1 hour before to 1 hour after rush hour.  We will need to run two simulations (one including the extra highway lanes and one without).
+\end{enumerate}
+
+
+\section{Identify or create the required data}
+
+\par This software requires that network and car objects be imported as a dictionary objects.  At the bare minimum, each imported network requires 2 or more nodes and 1 or more edges (with start and end node IDs specified), with unique identifiers for each.  Each imported car requires (at minimum) a unique identifier and a start and end location for the journey it will take. Users may specify additional attributes that align with their simulation scope, but these are not essential for a simulation to run. \\
+
+\par Users feed information into the simulation by providing a objects (json or otherwise) in the following format.  Mandatory fields for the configs have been bolded:
+
+\subsection{Network object format}
+
+\begin{alltt}
+\{
+    "node_list": [
+        \{
+            "\textbf{id}": <int>
+            "
+        \},
+        ...
+    ],
+    "edge_list": [
+        \{
+            "\textbf{id}": <int>,
+            "\textbf{start_node_id}": <int>,
+            "\textbf{end_node_id}": <int>,
+            "edge_length": <float>,
+            "max_speed": <float>,
+            "max_capacity": <int | Infinity>
+        \},
+        ...
+    ]
+\}
+\end{alltt}
+
+
+\subsection{Car object format}
+
+\begin{alltt}
+\{
+    "car_list": [
+        \{
+            "\textbf{id}": <int>,
+            "\textbf{start_edge}": <int>, 
+            "start_pos_meter": <float>, 
+            "\textbf{end_edge}": <int>,
+            "end_pos_meter": <float>,
+            "path": <list of consecutive edge ids>,
+            "car_length": <float>, 
+            "car_type": <"Static" | "Dynamic">,
+            "route_preference": <"Shortest" | "Fastest" | 
+                                 "Random">,
+            "max_tick_potential": <0 < float ≤ 1>
+        \},
+        ...
+    ]
+\}
+\end{alltt}
+
+\subsection{Object creation}
+
+\par Users can create the objects themselves, or use the optional \textbf{CarGenerator} and \textbf{UnderlyingNetworkGenerator} modules to output such files. These config files are necessary to launch a new simulation, but are also the expected format of any additions to the network or simulation during the run time.  Any objects imported after initialization should only include new objects.\\
+
+\par Because the simulation is capable of importing objects from another simulation's outputs, it should be noted that the config files can be combined into one document.  
+
+
+\subsection{Example}
+ \par  Back to our simulation example. \ we identified an existing dataset for network that needed formatting and a schema (but no data) for creating cars.  This requires reformatting the csv network data and using the \textbf{CarGenerator} module (described in my colleague's thesis) to create the cars. \\
+ 
+\par To use the network csv data, we first need rename and reconfigure the fields to match those required to match the our scope, then convert the file from csv to json.  In this case, the steps required are:
+
+\begin{enumerate}
+    \item Rename the start and end node fields, and label the edge identifier field as "id". 
+    \item Redefine speed.  If the daytime speed limit is 60 km/h but we want our system to have a tick size (process new state) of 1 second to improve simulation accuracy.  Converting to meters per second, that max\_speed is now 16.667.
+    \item Create mirror edges for segments labeled "bidirectional".  If edge 1789 is bidirectional and goes from A to B, then we need to create a new edge with a new unique ID that goes from B to A.
+    \item Duplicate edges to represent the multiple lanes.  If the highway is currently 4 lanes wide, then 3 additional copies are needed for each edge representing the highway.
+    \item Create a second copy of the network file, but add extra edges representing the extra lane on the freeway.
+    \item Convert the csv(s) to json.
+\end{enumerate}
+
+\noindent If we decided to create cars manually instead, we could use the DEFAULT car config file to to batch out the creation of two car types:  cars (who travel like normal), and trucks (who drive 10\% slower, which translates to setting a default max\_tick\_potential to 0.9).
+
+
+
+\section{Set up a new simulation environment and Translate the scope to code }
+
+\par The \textbf{Traffic} module serves as an API into the simulation controls; to use \textbf{Traffic} and either of the optional generator modules in the Traffic Network Simulator, the user must import them into their workspace. \\
+
+\par Set up a new python file with the following (or something similar), downloading/installing the modules and (default) config directory associated with this software:
+
+\begin{alltt}
+from \textbf{Traffic} import \textbf{TrafficManager}
+import json
+
+# and these two if needed:
+from \textbf{configs.UnderlyingNetworkGenerator} import \textbf{NetworkGenerator} 
+from \textbf{CarGenerator} import \textbf{*}      # if needed
+\end{alltt}
+
+\par In your working file, use relevant calls to the \textbf{Traffic} API to build your simulation.  Generally, this includes building a script that calls for a certain amount of ticks, adding cars at relevant points along the way.  For more complex simulations, the user may want to use commands to pause or resume the motion of particular cars (simulating traffic accidents) or prevent access to entire roads/sections of the network.  Please refer to the \autoref{Appendix}, \textit{"\nameref{Appendix}"}, for a full list of API commands available in the current software version. \\
+
+\par For our working rush hour traffic example, we have the following things to consider:
+
+\begin{itemize}
+    \item Import the car and (two) network config files and store them as dictionary objects.  Note:  The car objects are assumed to be stored in file after generation here, but that is not necessary.
+    \item Since we are running 2 simulations (the existing road network with and without the additional lanes), we need to instantiate one TrafficManager per simulation.
+    \item Determine how many ticks the simulation(s) must run for.  If "rush hour" is 2 hours and we want to also capture the hour before and hour after, we need our simulation to run for 4-hours' worth of ticks.  Since the max\_speed precision is defined as meters per second, the simulation should run for 14400 ticks.
+    \item Batch out when cars enter the network wince the 8000 cars obviously do not all start driving at the same time.  Perhaps for the first half hour, 400 cars enter, 800 the next half hour, 1500 for the next four half hours, then 400 for the last 2 half hours. (Though there are more accurate ways to model network enter time than these discrete buckets, that choice is left to the user).
+    \item Store network snapshots.  One snapshot per tick may be excessive, but a snapshot every minute may be reasonable.  This could translate to grabbing a snapshot every 60 ticks.
+\end{itemize}
+
+\noindent To translate that into code, we may write the following:
+
+\begin{alltt}
+from \textbf{Traffic} import \textbf{TrafficManager}
+import json
+
+if __name__ == "__main__":
+
+    # import configs
+    network_config_original = None
+    try:
+        with open("./configs/road_data.json") as 
+                  original_json_file: 
+            network_config_original = json.load(
+                                      original_json_file)
+    except Exception as E:
+        print(E)
+        
+    network_config_newlane = None
+    try:
+        with open("./configs/road_data_extralane.json") as 
+                  newlane_json_file: 
+            network_config_newlane = json.load(newlane_json_file)
+    except Exception as E:
+        print(E)
+
+    car_config = None
+    try:
+        with open("./configs/generated_cars.json") as car_file:  
+            car_config = json.load(car_file)
+    except Exception as E:
+        print(E)
+        
+    # batch cars
+    cars_batch_1 = car_config["car_list"][0:400]
+    cars_batch_2 = car_config["car_list"][400:1200]
+    # ...etc
+    
+    # set up the 2 simulations
+    tm_original = TrafficManager(network_config_original)
+    tm_newlane = TrafficManager(network_config_newlane)
+    
+    # advance timestamps for simulation 1, adding cars when 
+           necessary, outputting snapshots when necessary
+    for car in cars_batch_1:
+        tm_original.add_car(car)
+    for tick in range(1800):     # 30 min
+        tm_original.tick()
+        if tick \% 60 == 0:
+            with open(str(tm_original.get_timestamp()) + 
+                          '_snapshot.json', 'w') as f:
+                json.dump(tm_original.get_snapshot(), f)
+    
+    # ...etc for remaining car and time batches
+    #  repeat "advance timestamps" for tm_newlane
+\end{alltt}
+
+
+\section{Interpret the simulation outputs}
+
+\par When running tm.tick(), a pair of statements will print in the terminal for each tick:
+
+\begin{itemize}
+    \item "Steps needed to process tick:  n"
+    \item "Percent of available energy used on tick:  m.00\%"
+\end{itemize}
+
+\noindent Due to how the tick function works, the full set of nodes and edges will processed as many times as it takes for no more energy to exist or the tick to cause all cars to use up their energy potential. This number of iteration will be 1 if no cars are able to move at all (due to having completed their journey or being labeled temporarily by the user as "immobile"); but more frequently the minimum count is 2 due to a second pass checking if any more motion is possible.  Any number higher than this is a proxy for how complicated the current state change is, but holds no direct meaning on its own. \\
+
+\par However, the second item holds more weight.  Since cars move by using tick potential, if something is preventing a car from moving, movement potential will remain at the end of the turn, indicating that some kind of bottleneck or obstruction is in the way.  Due to the random order of node and tick processing, the user should refrain from taking the energy consumption as a direct metric of congestion, but instead use a moving window average to detect trends or even a global average when comparing simulations (if evaluating the difference a capacity meter, or speed limit change, etc can make). \\
+
+\par  Of course, the user can also elect to save snapshots of the whole network simulation at any point in time.  These snapshots can be individually analyzed for a detailed overview of current network state, or aggregated with a database to observe or compare individual (or categories of) cars and edges.
+

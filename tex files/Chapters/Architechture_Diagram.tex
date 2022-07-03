@@ -1,9 +1,9 @@
-\chapter{Softare Structure}
+\chapter{Software Structure}
 \label{Structure}
 
 \par This software is comprised of several interconnected modules.  Each module represents an abstract concept required for modelling a traffic scenario, each containing as many classes as are needed to create the components necessarily for that concept.  This results in the creation of three self\-contained modules representing the network, the cars/objects traversing the network, and the state-changer.  To make the simulation complete and fully self-contained, the user may utilize two additional optional modules for generating the network structure and car objects. Following normal naming conventions, and module that a user may directly interact with has been named using capitalization; dependent modules (hidden to the user) are named using only lowercase.
 
-\section{Essential Modules for the Network Traffic Simulator}
+\section{Essential Modules for the Network Traffic \\ Simulator}
 
 \subsection{Network Module:  traffic\_network}
 
@@ -76,7 +76,37 @@
 
 \section{Extended Module Interaction}
 
-Two optional additional modules for generating the underlying network and the car objects themselves can be integrated into the 
+\par For the simulation to run, it must be provided with car objects to move on the network and a network object to move the cars along.  How this information is provided to the Traffic module is left up to the user, but some suggestions are provided below.
+
+\subsection{Importing Cars}
+
+\par With existing traffic data, one may want to create a realistic simulation by generating cars and adding them to the network in a way that emulates the real-world data.  To do this, my colleague has created a separate \textbf{CarGenerator} module that allows users to generate cars probabilistically.  This optional module can be run on its own, or integrated directly into the simulation by passing along the \textbf{TrafficManager} and \textbf{Network} instance pointers to the generator.  The details of the generation process and types of patterns the module generates can be found in my colleague's project writeup. \\
+
+\par In lieu of using the \textbf{CarGenerator} module, users may provide their own custom car objects (as a dictionary) as input into the \textbf{TrafficManager} instanciation.  By allowing file-import flexibility to the car adding mechanism, the simulation is therefore capable of using its own snapshot outputs as input to a new simulation.  This allows users to run the same batch of cars (created manually, or by the module) to be run over multiple simulations and compare outputs.
+
+
+
+\subsection{Importing a Network}
+
+\par Much like importing cars, flexibility has been given in how network structures can be loaded into the simulation.  \\
+
+\par I have written an optional module, \textbf{UnderlyingNetworkGenerator},  for creating networks based on mathematical concepts like Erdős-Renyi random networks or complete bidirectional networks.  This module creates a stripped-down version of a \textbf{Network} object, assigning only the most essential attributes to individual nodes and edges.  Simple underlying networks may be beneficial for simulations where emphasis is to be placed on the mechanisms of the network action itself (like stoplight cycles or road capacity metering) rather than microscopic analysis.  Though the current version of this module is quite bare-bones, it can (and will) be easily adapted to include more complex, probabilistic attribute assignments. \\
+
+\par For real-world simulations, though, a user would probably prefer to import existing road or network data.  This can be done by converting geojson/csv/shp files to the json format seen in the simulation repository's file "\textit{EXAMPLE\_network\_config.json}".  This method has been tested and confirmed by taking road and waterways WFS data from Het Nationaal Wegenbestand \cite{NWB22} and stripping the "road" segments to just their ID, start-point identifier, end-point identifier, and directionality (if a segment was labeled as bi-directional, then the segment was duplicated with a new ID, reversing the start and end points).
+
+
+\subsection{Complete Module Interaction}
+
+\par Incorporating the car and network imports and user direction into the Simulation ecosystem, we end up with the resulting User-Software Architecture Model:
+
+\begin{figure}[H]
+    \centering
+	\includegraphics[width=\textwidth]{tex files/Figures/complete_architecture.png}
+	\caption[User-Software Interaction]{Generalized overview of interactions between modules, including the use of optional generator modules and/or load files}
+	\label{fig:modules_all}
+\end{figure}
+
+
 % \usetikzlibrary{positioning,matrix,shapes.arrows}
 
 % \tikzset{

@@ -3,12 +3,19 @@
 
 \par Being a mathematician and not a programmer, I wanted as general of a solution as possible to creating an extensible and multi-use simulation model.  After all--if one can prove that the generalized solution works, then any special case should, too.  So I set out redefining the problem of traffic simulation from a data structures and storage problem to one of pure graph theory and combinatorics. \\
 
-\par  However, it wasn't very long before I was forced to face the fact that computers do not quite work like that, and computers require a bit more work to conform to the natural mathematics of graph theory.  While computers force discreteness, I aimed to design a simulation system which could mimic real-world continuity as closely as possible.  With that as the utmost goal, the system was designed as follows: \\
+\par  However, it wasn't very long before I was forced to face the fact that computers do not quite work like that, and computers require a bit more work to conform to the natural mathematics of graph theory.  While computers force discreteness, I aimed to design a simulation system which could mimic real-world continuity as closely as possible.  With that as the utmost goal, the system was designed with the following criteria: \\
 
-\section{Network Structure}
+
+\section{Network Structure:  how should the network be stored in memory?}
 \par At least my computer and I could agree on one thing from the start:  traffic simulation is a graph problem.  Intuitively, nodes are connection points for several edges, like road intersections, cellular towers, etc.  By utilizing graph data structures, one can also take advantage of the numerous existing path-finding algorithms and easily keep track of connected pair of nodes (and their directionality). \\
 
 \par Further continuing with intuitive design decision, it followed that the network needed to be directional, and that multiple parallel edges between a pair of nodes should be allowed.  Directionality's reason is easy to sport:  car lanes force traffic in a particular direction, and packets of information cannot necessarily be transmitted in both directions (especially if there are intermediary steps, like encryption, that are not reversible). \\  
+
+
+\par Allowing for multiple parallel edges is a good way to increase (or restrict) edge capacity, and serves as another parameter the user can tune to mimic real-world constraints.  This ensures that this traffic simulator has the flexibility to model microscopic and macroscopic traffic trends \cite{LWB18}.  Using normal commuting traffic as an example, a user can test whether or not adding another lane to a freeway (or adding lane accessible to cars only of a certain type) would ease congestion as they are able to view metrics and positionality per timestamp of the entire system (macroscopic), the set of edges between two nodes or each individual node (mesoscopic), and the individual cars on those roads themselves (microscopic) \cite{LWB18}. \\
+
+
+\par Though some traffic simulations in existence use adjacency matrices to define neighbouring nodes \cite{GPK02}, this is not a scalable, nor desirable, solution .  While adjacency matrices are intuitive for humans to read and understand, since most networks are fairly sparse they end up storing a lot of NULL values and require n! complexity to process those NULLs.  While little heed is paid to memory conservation in the rest of this simulation's design process, the idea of holding space for nonexistent edges did not seem like a very good idea.  Instead, it makes sense to think more about the interactions of node-edge pairs via their object pointers.  Adjacency matrices acknowledge that an edge is defined by its originating and terminal nodes, but fails to demonstrate how a node is only interesting because of the set of inbound and outbound edges it connects.  To capture both of these ideas, I used dictionary mappings to identify and link nodes to edges and edges to nodes, allowing either or both interactions to be utilized, depending whichever one was more intuitive for the particular action being done at any point in the simulation process.\\
 
 \begin{figure}[H]
     \centering
@@ -17,14 +24,20 @@
 	\label{fig:generic_network}
 \end{figure}
 
-\par Redundancy is a bit trickier, but ensures that this traffic simulator has the flexibility to model microscopic and macroscopic traffic trends \cite{LWB18}.  Allowing for multiple parallel edges is a good way to increase (or restrict) edge capacity, and serves as another parameter the user can tune to mimic real-world constraints.  Using normal commuting traffic as an example, a user can test whether or not adding another lane to a freeway (or adding lane accessible to cars only of a certain type) would ease congestion as they are able to view metrics and positionality per timestamp of the entire system (macroscopic), the set of edges between two nodes or each individual node (mesoscopic), and the individual cars on those roads themselves (microscopic) \cite{LWB18}. \\
+% TODO:  closeup image of path/when nodes used/when edges used
+
+\section{How does the traffic network change state, processing car movement?}
+
+\par A methodical process is needed to execute all the actions that can take place on each tick of the simulator (tick being the function that executes said changes for each incremental timestamp in the simulation runtime).  Once all available or possible actions have been made for that tick, the simulation is considered to be in a new state, and that information about that state is returned to the user. \\
+
+\par The network object is build of nodes and edges, so it makes sense to break down the action queue to these levels as well.  However, you can't just arbitrarily run all nodes and edges as there is an inherent order and hierarchy to them.  As edges are defined by their start and end nodes, it makes sense to have edge tick processes as a dependent of node tick processes.  Furthermore, because nodes are capable of having multiple inbound and outbound edges, it is essential to process a particular node's edge ticks together to ensure as smooth and realistic of a movement between edges as possible. \\
+
+\par To ensure that each component of a network is only processed once, on each tick, the network tick function iterates through all nodes listed in the network's node dictionary.  Each node, in turn, processes each outbound edge in its adjacent outbound edges dictionary.  The network tick and its subsequent node and edge ticks will be performed as many times as necessary until the cars run out of energy (more on that later in the \textbf{Movement} section) \textit{or} no more advances can be made with the current remaining energy potentials, and report out the number of loops needed to do so and the total percent of potential energy used.  These values can be used as a proxy for network congestion, though more as a benchmark between ticks or simulations than as an absolute value of ability. \\
+
+\par To ensure that no node nor edge is favored (ei: always has their candidate cars move before any other node or edge's), the order in which these items are iterated is shuffled with each pass.  While this helps immensely with simulation accuracy, the random nature is what prevents the output numbers from being a reliable and accurate metric of network (in)action. 
 
 
-\par Though some traffic simulations in existence use adjacency matrices to define neighbouring nodes \cite{GPK02}, this is not a scalable, nor desirable, solution.  While adjacency matrices are intuitive for humans to read and understand, since most networks are fairly sparse they end up storing a lot of NULL values.  While little heed is paid to memory conservation in the rest of this simulation's design process, the idea of holding space for nonexistent edges did not seem like a very good idea.  Instead, it makes sense to think more about the interactions of node-edge sets.  Adjacency matrices acknowledge that an edge is defined by its originating and terminal nodes, but fails to demonstrate how a node is only interesting because of the set of inbound and outbound edges it connects.  To capture both of these ideas, I used dictionary mappings to identify and link nodes to edges and edges to nodes, allowing either or both interactions to be utilized, depending whichever one was more intuitive for the particular action being done at any point in the simulation process.\\
-
-
-
-\section{"You Are Here"}
+\section{Where should car location be stored?}
 
 \par A traffic simulation is not very insightful without considering the things which themselves cause traffic--Who, or what, keeps track of where the "cars" are?  Though innocuous, the question leads to some philosophical fancies that need to be addressed before determining who (or what) is in charge of your position. \\
 
@@ -32,7 +45,8 @@
 
 \par But what if you (are trying to) drive home 5 o'clock Friday in the thick of traffic?  Yes, you \textit{chose} to take a particular route home, but now you're stuck in bumper-to-bumper traffic and can't move forward til the car in front of you decides to (or can at all).  While you may be in control of your car, you don't have full control over your ability to move, and thus over your position.  This leads to the inevitable conclusion that a simulation will be most accurate if the network controls the cars rather than letting the cars control themselves, meaning that current position must be stored on the objects over which the cars are moving:  the edges.
 
-\section{...But where, exactly, is "Here"?}
+
+\section{Discrete versus continuous systems:  how is position represented?}
 
 \par Since edges store car locations and move them along a particular distance each unit of time, it's tempting to think of positions in terms of capacity.  If an edge is 10 units long and cars travel 2 units per time, there are 5 positions a car can be, so a car's position can be stored as its index in the capacity queue.  This makes movements easy to simulate and requires a minimal, fixed storage space no matter the amount of cars on the network.  So this is that design choice, right? \\
 
@@ -71,12 +85,12 @@
 	\label{fig:BasicDiscrete_between}
 \end{figure}
 
-\par It is clear that some other solution is needed if a realistic simulation is to be created.  And that solution is simple:  switch to floating point positions.  By mapping cars to their exact position from 0 to maximum edge length, the user can be explicit about how long each car is and how close the cars are allowed to be to each other, all the while ensuring accuracy in car behavior by preventing skipping.
+\par It is clear that some other solution is needed if a realistic simulation is to be created.  And that solution is simple:  switch to floating point positions.  By mapping cars to their exact position from 0 to maximum edge length, the user can be explicit about how long each car is and how close the cars are allowed to be to each other, all the while ensuring accuracy in car behavior by preventing skipping.  While this adds additional complexity to movement calculations, the resulting affinity for precision solves any practical or logical issues that a discrete system would incur.
 
 
-\section{Paths, Origins, and Destinations}
+\section{On Paths, Origins, and Destinations}
 
-\par "How do I get from Point A to Point B?" and what even constitutes a "point"?  Path-finding algorithms typically find the fastest/shortest/"best" route between any 2 given nodes, which would imply that nodes are the points. This intuitively makes sense and works great for simulation paths with bounded, real-world constraints.  Take (a very simplified example of) email communication:  emails will always start at one machine (node), travel to a server (node), and perhaps be passed onto another server for the receiver to view (node); there might be more or less steps between each landmark, but the only way the message can get lost as at one of the endpoints.  \\
+\par "How do I get from Point A to Point B?" and what even constitutes a "point"?  Path-finding algorithms typically find the fastest/shortest/"best" route between any 2 given nodes, which would imply that nodes are the points. This intuitively makes sense and works great for simulation paths with bounded, real-world constraints.  Take (a very simplified example of) email communication:  emails will always start at one machine (node), travel to a server (node), and perhaps be passed onto another server for the receiver to view (node); there might be more or less steps between each landmark, but the only place a message can originate is at one of the endpoints.  \\
 
 \par However, cars do not spawn in the middle of a four-way intersection, nor does it make sense to create a network model where every possible parallel parking spot is a separate node in a network.  For one, someone could do a terrible parking job and take up two spots, therefore creating some new start or end node somewhere between the existing spots.  But the more pressing issue with breaking a road into n continuous, sequential, connected segments is the same sort of unwanted inefficiency as the adjacency matrices proposed earlier:  there's a lot space and computation wasted on pairs that generally provide no function to the simulation. \\
 
@@ -85,18 +99,7 @@
 \par Since start and end locations have been set to edges, path finding calculations also are done on an edge to edge basis.  As edges only know their bounding nodes (and nodes their adjacent edges), calculations are done on the network level, allowing chaining between edge dictionaries of nodes and node dictionaries of edges to build potential paths.
 
 
-\section{Order}
-
-\par A methodical process is needed to execute all the actions that can take place on each tick of the simulator (tick being the function that executes said changes for each incremental timestamp in the simulation runtime). \\
-
-\par The network object is build of nodes and edges, so it makes sense to break down the action queue to these levels as well.  However, you can't just arbitrarily run all nodes and edges as there is an inherent order and hierarchy to them.  As edges are defined by their start and end nodes, it makes sense to have edge tick processes as a dependent of node tick processes.  Furthermore, because nodes are capable of having multiple inbound and outbound edges, it is essential to process a particular node's edge ticks together to ensure as smooth and realistic of a movement between edges as possible. \\
-
-\par To ensure that each component of a network is only processed once, on each tick, the network tick function iterates through all nodes listed in the network's node dictionary.  Each node, in turn, processes each outbound edge in its adjacent outbound edges dictionary.  The network tick and its subsequent node and edge ticks will be performed as many times as necessary until the cars run out of energy \textit{or} no more advances can be made with the current remaining energy potentials, and report out the number of loops needed to do so and the total percent of potential energy used.  These values can be used as a proxy for network congestion, though more as a benchmark between ticks or simulations than as an absolute value of ability. \\
-
-\par To ensure that no node nor edge is favored (ei: always has their candidate cars move before any other node or edge's), the order in which these items are iterated is shuffled with each pass.  While this helps immensely with simulation accuracy, the random nature is what prevents the output numbers from being a reliable and accurate metric of network (in)action. 
-
-
-\section{Movement}
+\section{How do cars move along their path?}
 
 \par A simulation is practically useless unless it models the movement of objects predictably and (semi-)realistically; the problem of how to model node-crossing caused me quite some consternation. \\
 
@@ -123,7 +126,7 @@
 
 \noindent It follows that the total energy of the universe remains constant, so any energy expended on moving an object is subtracted from the object's potential energy to ensure the balance remains.  By defining a car's "potential" for movement during one tick, we can define its actual moment as a proportion of that, allowing multiple actions to be done in one tick (as long as there is energy potential to spend).  Furthermore, we can calculate the total unexpended energy at the end of the tick of the entire network \textit{or} for a particular edge and use this as a metric for how backed-up or congested the network is. \\
 
-\subsection{Car Movement Using Tick Potential}
+\subsection{Car movement using tick potential}
 % TODO:  illustrate with drawings
 \par The following steps describe how a car can possibly move within one tick.
 \begin{enumerate}
@@ -139,12 +142,12 @@
     % \item Once no more movement is possible for the current tick, concatenate set processed\_cars lists as the new current\_cars queue for next tick.
 \end{enumerate}
 
-\subsection{Multiple Inbound Edges}
+\subsection{Multiple Inbound Edges:  Mitigating preferential treatment of nodes or edges}
 % TODO:  illustrate with drawings
 \par The issue of multiple cars across several edges eligible to change onto the same new edge is solved, in part, by the random shuffling of each node tick and edge tick order.  Some randomness will persist as the order edges are processed may affect whether other cars are even eligible to enter after it, but I would argue that the randomness accurately portrays real-world indecisiveness (at least for car traffic networks) and thus is not something to fear, but rather embrace.  However, if this is deemed undesirable by the user, they can mitigate the effects by choosing a small enough tick time that differences are negligible.  Tick time can be adjusted by adjusting the scalar values for the maximum speed parameter of the edges.
 
 
-\section{Attributes}
+\section{What kinds of object attributes should be required for the simulation to run?}
 
 \par Since the simulation software should allow for full flexibility in what types of network systems it models, it was important to make sure the simulation requires as few mandatory fields as possible to produce a reasonable simulation, but allow for additional parameters inherent to a particular system.  \\
 
@@ -152,7 +155,7 @@
 
 
 
-\section{Snapshot}
+\section{Snapshot:  a method for outputting the state of the entire simulation}
 
 \par Though the random factor prevents a truly reproducible simulation, I have designed the simulation snapshots to be made in such a format that they can also serve as simulation input for later simulation.  This provides continuity between all files associated with the simulation and makes it easier to recover the simulation and its output in case of machine failure/crashing. \\
 
