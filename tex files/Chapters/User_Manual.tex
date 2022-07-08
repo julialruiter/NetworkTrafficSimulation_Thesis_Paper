@@ -34,18 +34,18 @@
 
 \par Users feed information into the simulation by providing specially-formatted objects (json or otherwise).  A complete view of the file format can be found in \autoref{Configs} (Appendix), but the main thing to note is that very few fields are mandatory. \\
 
-\par The Network config file consists of two parts:  Node list and Edge list.  The only mandatory field for Nodes is the \textit{id} as a unique identifier, but users may also add details on stoplights/passage gates (if applicable).  Edges have a few more required attributes (\textit{id}, \textit{start_node_id}, \textit{end_node_id}), but also allow the user to specify conditions for metering like speed and maximum capacity.  Real-world simulations will typically require the user to specify \textit{edge_length} as well, though the simulation will run regardless, defaulting to equal-length edges (if none specified).
+\par The Network config file consists of two parts:  Node list and Edge list.  The only mandatory field for Nodes is the \textit{id} as a unique identifier, but users may also add details on stoplights/passage gates (if applicable).  Edges have a few more required attributes (\textit{id}, \textit{start\_node\_id}, \textit{end\_node\_id}), but also allow the user to specify conditions for metering like speed and maximum capacity.  Real-world simulations will typically require the user to specify \textit{edge_length} as well, though the simulation will run regardless, defaulting to equal-length edges (if none specified).
 
 
 \subsection{Object creation}
 
 \par Users can create the objects themselves, or use the optional \textbf{CarGenerator} and \textbf{UnderlyingNetworkGenerator} modules to output such files. These config files are necessary to launch a new simulation, but are also the expected format of any additions to the network or simulation during the run time.  Any objects imported after initialization should only include new objects.\\
 
-\par Because the simulation is capable of importing objects from another simulation's outputs, it should be noted that the config files can be combined into one document.  
+\par Because the simulation has been designed to be capable of importing objects from another simulation's outputs, it should be noted that the config files can be combined into one document.
 
 
 \subsection{Example}
- \par  Back to our simulation example. \ we identified an existing dataset for network that needed formatting and a schema (but no data) for creating cars.  This requires reformatting the csv network data and using the \textbf{CarGenerator} module (described in my colleague's thesis) to create the cars. \\
+ \par  Back to our simulation example. \ we identified an existing dataset for network that needed formatting and a schema (but no data) for creating cars.  This requires reformatting the csv network data and using the \textbf{CarGenerator} module (described in a colleague's thesis) to create the cars. \\
  
 \par To use the network csv data, we first need rename and reconfigure the fields to match those required to match the our scope, then convert the file from csv to json.  In this case, the steps required are:
 

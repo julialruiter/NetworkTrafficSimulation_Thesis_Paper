@@ -52,6 +52,30 @@ This software was created and tested on a machine with the following specificati
 \label{Configs}
 This section contains the full expected config file structure referenced in\autoref{Manual}, \textit{"\nameref{Manual}"}.  Mandatory fields for the configs have been bolded:
 
+\subsection{Car object format}
+
+\begin{alltt}
+\{
+    "car_list": [
+        \{
+            "\textbf{id}": <int>,
+            "\textbf{start_edge}": <int>, 
+            "start_pos_meter": <float>, 
+            "\textbf{end_edge}": <int>,
+            "end_pos_meter": <float>,
+            "path": <list of consecutive edge ids>,
+            "car_length": <float>, 
+            "car_type": <"Static" | "Dynamic">,
+            "route_preference": <"Shortest" | "Fastest" | 
+                                 "Random">,
+            "max_tick_potential": <0 < float ≤ 1>
+        \},
+        ...
+    ]
+\}
+\end{alltt}
+
+
 \subsection{Network object format}
 
 \begin{alltt}
@@ -74,30 +98,6 @@ This section contains the full expected config file structure referenced in\auto
             "edge_length": <float>,
             "max_speed": <float>,
             "max_capacity": <int | Infinity>
-        \},
-        ...
-    ]
-\}
-\end{alltt}
-
-
-\subsection{Car object format}
-
-\begin{alltt}
-\{
-    "car_list": [
-        \{
-            "\textbf{id}": <int>,
-            "\textbf{start_edge}": <int>, 
-            "start_pos_meter": <float>, 
-            "\textbf{end_edge}": <int>,
-            "end_pos_meter": <float>,
-            "path": <list of consecutive edge ids>,
-            "car_length": <float>, 
-            "car_type": <"Static" | "Dynamic">,
-            "route_preference": <"Shortest" | "Fastest" | 
-                                 "Random">,
-            "max_tick_potential": <0 < float ≤ 1>
         \},
         ...
     ]
@@ -164,36 +164,4 @@ if __name__ == "__main__":
     # ...etc for remaining car and time batches
     #  repeat "advance timestamps" for tm_newlane
 \end{alltt}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%---------------------------------------------------------------%
-\section{API Module: Traffic.py}
-This module instantiates a simulation instance and exposes all necessary/desired functions for interacting with the simulation once it is running:
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%---------------------------------------------------------------%
-\section{Hidden Simulation Module: traffic\_network.py}
-
-This module creates and runs an instance of a Network object when a simulation is created via starting a \textbf{TrafficManager} instance.  The main item here is \textbf{class Network}, which  contains, creates, and collects two dependent components (\textbf{class Node} and \textbf{class Edge}.  \\
-
-\noindent The functions here should be hidden from the user.  Instead, the user should call for changes using the\textbf{TrafficManager} API.  Internal functions belonging to the \textbf{traffic\_network} module can be seen below:
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%---------------------------------------------------------------%
-\section{Hidden Simulation Module: network\_cars.py}
-
-\par This module creates and stores a car object.  A car is created when called into existence by an API call via the \textbf{Traffic} module.  While the \textbf{network\_cars} module is fully dependent on the \textbf{network\_traffic} module to move, car objects can exist separately.  Thus,  \textbf{network\_cars} is imported into the \textbf{network\_traffic} module to allow for object-network interaction. \\
-
-\noindent Once again, the functions here should be hidden from the user.  Instead, the user should call for changes and additions using the\textbf{TrafficManager} API.  Internal functions belonging to the \textbf{network\_traffic} module can be seen below:
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%---------------------------------------------------------------%
-\section{Optional Module:  \\ UnderlyingNetworkGenerator.py}
-
-In the absence of a pre-made graph to run the simulation on, the user can elect to use this module to generate a network.  This method of Netowrk generation may be useful for some particular use cases where it is beneficial to create a graph with many Nodes and Edges sharing the same properties.\\
-
-\noindent The current version of this module supports the creation of Erdős-Renyi random graphs OR complete, bidirectional graphs.  This module will be improved later to support other mathematical network types.
 

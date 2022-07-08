@@ -7,7 +7,7 @@
 
 \subsection{Network Module:  traffic\_network}
 
-\par As noted in the previous chapter, a network must have three components (network structure, nodes, and edges) \textit{and} there exists an inherent hierarchy to these structures (a network only exists by defining sets of connected nodes).  Though for creation purposes it may make sense to define the nodes and edges and let the network be a dependent object, that does not make sense for the problem at hand:  traffic simulation is the analysis of objects moving over a network, therefore the Network itself must be given (requiring a class of its own), leading to Nodes and Edges being dependent classes.  The module \textbf{traffic\_network} has been created to collect the instances and interactions of all network components for a simulation instance.  \\
+\par As noted in the previous chapter, a network must have three components (network structure, nodes, and edges) \textit{and} there exists an inherent hierarchy to these structures (a network only exists by defining sets of connected nodes).  Though for creation purposes it may make sense to define the nodes and edges and let the network be a dependent object, that does not make sense for the problem at hand:  traffic simulation is the analysis of objects moving over a network, therefore the Network itself must be given (requiring a class of its own), leading to the component Nodes and Edges being dependent classes.  The module \textbf{traffic\_network} has been created to collect the instances and interactions of all network components for a simulation instance.  \\
 
 \par The resulting module structure is as follows:
 
@@ -18,10 +18,34 @@
 	\label{fig:network_module}
 \end{figure}
 
+\par The \textbf{traffic\_network} module creates and runs an instance of a Network object which creates and corrals its constituent Node and Edge objects.  Please note that the functions in this module should be hidden from the user.  Instead, the user should call for changes using the\textbf{TrafficManager} API. \\
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Network class}
+
+\par The \textbf{Network} class contains all attributes and functions relating to the network as a whole.  It contains a pointer to the TrafficManager simulation instance it was created for, a global timestamp, and dictionaries mapping IDs of the nodes, edges, and cars on the network back to the objects they represent. \\
+
+\par Since the simulation depends heavily on the structure of the network, the \textbf{Network} class hosts a slew of functions whose output is utilized by both the User and cars running on the network.  It has the capability to place new cars on the network, add and remove nodes and edges from the network, find (optimal) paths between any two points on the network, assess the consumed movement "potential" of the system, and oversees the movement tick() function on the \textbf{Node} level. \\
+
+\subsubsection{Node class}
+
+\par The \textbf{Node} class contains all attributes and functions pertaining to the purpose of a \textbf{Node} in the network.  Each \textbf{Node} has dictionary mappings of its inbound and outboud \textbf{Edge} ids back to the \textbf{Edge} objects they represent.  This is essential for facilitating the movement of cars across the \textbf{Node} when cars move off one \textbf{Edge} and onto another via the\textbf{Node}'s tick() function. \textbf{Node}s may also have an instersection\_time\_cost; this value is used to account for the real-world time (and space) delay that occurs when switching from one edge to another (like the physical time and distance of turning a corner on a busy road, or the time it takes to perform an http handshake). \\
+
+\par  Additionally, the \textbf{Node} supports stoplight capabilities, which are more broadly categoriezed as a time-based restriction on available \textbf{Edges}.  Attributes like stoplight pattern, duration, and delay define which "open" and "closed" states are available, with a change\_stoplight() function to control the cycling through these states. \\
+
+\subsubsection{Edge class}
+
+\par The \textbf{Edge} class contains information and functions related to an individual \textbf{Edge} in the \textbf{Network}.  While it needs pointers back to the start and end \textbf{Node} objects that define it (and other attributes that were part of the \textbf{Edge}'s \textbf{Network} config), it also does a lot of work in the actual movement of cars in the simulation. \\
+
+\par When an \textbf{Edge}'s start\_node object calls on the \textbf{Edge} to tick(), the car must not only keep track of the \textbf{Car}s currently located on it (via a \textbf{Car} id to \textbf{Car} object mapping), but discern between which \textbf{Car}s it has already and has yet to move on the current tick (in order to prevent cars from moving more than their potential energy allows them to).  For each \textbf{Car} on the \textbf{Edge}, the \textbf{Edge} must try to move it as far forward as possible, checking on the potential, the exit positions, \textit{and} the physical location of any other \textbf{Car}s on the \textbf{Edge} to prevent the cars from overlapping or phasing through each other. Furthermore, the \textbf{Edge} collects a list of any cars that have left the \textbf{Network} (by path completion or User input) whos last position was on that \textbf{Edge}, ensuring that \textbf{Car} information is never lost.\\
+
+\par The \textbf{Edge} also has another role to play in the \textbf{Node} tick() of its end\_node:  when a \textbf{Node} tries to transfer a \textbf{Car} from one \textbf{Edge} to another, it may fail if there is no room available on the new \textbf{Edge}.  This means that the old \textbf{Edge} must be capable of both holding onto the \textbf{Car} in case of failure, or handing it off if successful.\\
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Car Module:  network\_cars}
 
-\par "Car" is the general term I use to describe an object traversing the network as it allows for intuitive labeling of its attributes.  Once instantiated, a car is not dependent on the network to continue existing; to represent this semi-independence, the Car class was moved to a separate module:
+\par "Car" is the general term used in this document (and the Simulator itself) to describe an object traversing the network as it allows for intuitive labeling of its attributes.  Once instantiated, a car is not dependent on the network to continue existing; to represent this semi-independence, the Car class was moved to a separate module:
 
 \begin{figure}[H]
     \centering
@@ -32,6 +56,22 @@
 
 \par In practice, though, the car is not very interesting when trying to simulate overall network behavior and ensuing traffic scenarios.  Any attributes the user may care about (such as current location) are only relevant in context.  So while \textbf{network\_cars} technically exists as a self-contained module, it is never used in isolation.  Instead, this module is automatically imported into the \textbf{traffic\_network} module, seamlessly allowing these two modules to interact with one another.
 
+\par This module creates and stores a car object.  A car is created when called into existence by an API call via the \textbf{Traffic} module.  While the \textbf{network\_cars} module is fully dependent on the \textbf{network\_traffic} module to move, car objects can exist separately.  Thus,  \textbf{network\_cars} is imported into the \textbf{network\_traffic} module to allow for object-network interaction. \\
+
+\noindent Once again, the functions here should be hidden from the user.  Instead, the user should call for changes and additions using the\textbf{TrafficManager} API.  Internal functions belonging to the \textbf{network\_traffic} module can be seen below:
+
+\subsubsection{Car class}
+
+\par The \textbf{Car} class contains all pertinent static information about a Car (like id or car\_length), as well as information and ability to update dynamic values (like route\_status).  The flexibility of the \textbf{Car} to handle both types of data is what allows the Simulation to remain flexible and extensible. \\
+
+\par Most notably, a car can be assigned a "Static" or "Dynamic" type; a "Dynamic" type indicated that the \textbf{Car} is capable of recalculating its path any time time it reaches a \textbf{Node}.  This is coupled with a route\_preference attribute which determines what kind of path ("Fastest", "Shortest", or "Random") the \textbf{Car} will follow when it enters the \textbf{Network} or recalculates when reaching a \textbf{Node}. \\
+
+\par The \textbf{Car} must also keep track of its state at all times.  Any time the \textbf{Car} moves during an \textbf{Edge} tick, it must recalculate its remaining potential to know if it is eligible for movement again.  It must also be aware of where it is trying to exit the \textbf{Network} so it can tell the \textbf{Edge} where to exit, and must also know if its eligible to move at all (the User may halt it with a pause\_car(Car\_ID) function). \\
+
+\par  It is important to note that while the \textbf{Car} stores all of the information needed for it to run in the simulation, the simulation exists without the \textbf{Car}, and thus the \textbf{Car} itself has no power to change any \textbf{Network} attributes.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{State Module:  Traffic}
 
@@ -51,7 +91,14 @@
 
 \noindent  Note that the \textbf{Traffic} module allows only for indirect access to the simulation components.  By using this API as an intermediary between users and network simulation components, the user is given access only to commands that are relevant to analysis, and hide internal functions that facilitate those actions.  For example, if a user wants a particular car to halt in place, they can call on the API function that requests it.  The \textbf{Traffic} module then passes that request to the \textbf{traffic\_network} and/or \textbf{network\_cars} module to handle if and when it becomes relevant.
 
+\subsubsection{TrafficManager Class}
 
+\par The \textbf{TrafficManager} class instantiates a simulation instance and exposes all necessary/desired functions for interacting with the simulation once it is running.  This means that it must keep track of the \textbf{Network} is controls and a global timestamp for the system.  The timestamp (which can be retrieved with a get\_timestamp() function) allows the User (or \textbf{CarGenerator} module) to know when to trigger an event like add\_car(Car\_ID) or output the simulation state with get\_snapshot(). \\
+
+\par As the \textbf{TrafficManager} class serves as the simulation's API, it contains various functions for the User to interact with the simulation or passively return network information.  Besides add\_car, the User may use \textbf{TrafficManager} to remove\_car, or even pause\_car (and subsequently resume\_car).  The User may also request \textbf{Network} information via the \textbf{TrafficManager} class for things like listing all possible routes in the network, expected time (or distance) to complete a particular route, or a dump the simulation's state via get\_snapshot (which the User may then want to save in a json file or otherwise).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Essential Module Interaction}
 
 \par Putting the modules together, we get the following depiction of how the modules interact with one another:
@@ -80,9 +127,9 @@
 
 \subsection{Importing Cars}
 
-\par With existing traffic data, one may want to create a realistic simulation by generating cars and adding them to the network in a way that emulates the real-world data.  To do this, my colleague has created a separate \textbf{CarGenerator} module that allows users to generate cars probabilistically.  This optional module can be run on its own, or integrated directly into the simulation by passing along the \textbf{TrafficManager} and \textbf{Network} instance pointers to the generator.  The details of the generation process and types of patterns the module generates can be found in my colleague's project writeup. \\
+\par With existing traffic data, one may want to create a realistic simulation by generating cars and adding them to the network in a way that emulates the real-world data.  To do this, a colleague has created a separate \textbf{CarGenerator} module that allows users to generate cars probabilistically.  This optional module can be run on its own, or integrated directly into the simulation by passing along the \textbf{TrafficManager} and \textbf{Network} instance pointers to the generator.  The details of the generation process and types of patterns the module generates can be found in a colleague's project writeup. \\
 
-\par In lieu of using the \textbf{CarGenerator} module, users may provide their own custom car objects (as a dictionary) as input into the \textbf{TrafficManager} instanciation.  By allowing file-import flexibility to the car adding mechanism, the simulation is therefore capable of using its own snapshot outputs as input to a new simulation.  This allows users to run the same batch of cars (created manually, or by the module) to be run over multiple simulations and compare outputs.
+\par In lieu of using the \textbf{CarGenerator} module, users may provide their own custom car objects (as a dictionary) as input into the \textbf{TrafficManager} instantiation.  By allowing file-import flexibility to the car adding mechanism, the simulation is therefore capable of using its own snapshot outputs as input to a new simulation.  This allows users to run the same batch of cars (created manually, or by the module) to be run over multiple simulations and compare outputs.
 
 
 
@@ -90,7 +137,7 @@
 
 \par Much like importing cars, flexibility has been given in how network structures can be loaded into the simulation.  \\
 
-\par I have written an optional module, \textbf{UnderlyingNetworkGenerator},  for creating networks based on mathematical concepts like Erdős-Renyi random networks or complete bidirectional networks.  This module creates a stripped-down version of a \textbf{Network} object, assigning only the most essential attributes to individual nodes and edges.  Simple underlying networks may be beneficial for simulations where emphasis is to be placed on the mechanisms of the network action itself (like stoplight cycles or road capacity metering) rather than microscopic analysis.  Though the current version of this module is quite bare-bones, it can (and will) be easily adapted to include more complex, probabilistic attribute assignments. \\
+\par An optional module, \textbf{UnderlyingNetworkGenerator},  has been written for creating networks based on mathematical concepts like Erdős-Renyi random networks or complete bidirectional networks.  This module creates a stripped-down version of a \textbf{Network} object, assigning only the most essential attributes to individual nodes and edges.  Simple underlying networks may be beneficial for simulations where emphasis is to be placed on the mechanisms of the network action itself (like stoplight cycles or road capacity metering) rather than microscopic analysis.  Though the current version of this module is quite bare-bones, it can (and will) be easily adapted to include more complex, probabilistic attribute assignments. \\
 
 \par For real-world simulations, though, a user would probably prefer to import existing road or network data.  This can be done by converting geojson/csv/shp files to the json format seen in the simulation repository's file "\textit{EXAMPLE\_network\_config.json}".  This method has been tested and confirmed by taking road and waterways WFS data from Het Nationaal Wegenbestand \cite{NWB22} and stripping the "road" segments to just their ID, start-point identifier, end-point identifier, and directionality (if a segment was labeled as bi-directional, then the segment was duplicated with a new ID, reversing the start and end points).
 
