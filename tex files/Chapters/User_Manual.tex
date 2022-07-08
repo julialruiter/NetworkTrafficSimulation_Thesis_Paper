@@ -32,56 +32,10 @@
 
 \par This software requires that network and car objects be imported as a dictionary objects.  At the bare minimum, each imported network requires 2 or more nodes and 1 or more edges (with start and end node IDs specified), with unique identifiers for each.  Each imported car requires (at minimum) a unique identifier and a start and end location for the journey it will take. Users may specify additional attributes that align with their simulation scope, but these are not essential for a simulation to run. \\
 
-\par Users feed information into the simulation by providing a objects (json or otherwise) in the following format.  Mandatory fields for the configs have been bolded:
+\par Users feed information into the simulation by providing specially-formatted objects (json or otherwise).  A complete view of the file format can be found in \autoref{Configs} (Appendix), but the main thing to note is that very few fields are mandatory. \\
 
-\subsection{Network object format}
+\par The Network config file consists of two parts:  Node list and Edge list.  The only mandatory field for Nodes is the \textit{id} as a unique identifier, but users may also add details on stoplights/passage gates (if applicable).  Edges have a few more required attributes (\textit{id}, \textit{start_node_id}, \textit{end_node_id}), but also allow the user to specify conditions for metering like speed and maximum capacity.  Real-world simulations will typically require the user to specify \textit{edge_length} as well, though the simulation will run regardless, defaulting to equal-length edges (if none specified).
 
-\begin{alltt}
-\{
-    "node_list": [
-        \{
-            "\textbf{id}": <int>
-            "
-        \},
-        ...
-    ],
-    "edge_list": [
-        \{
-            "\textbf{id}": <int>,
-            "\textbf{start_node_id}": <int>,
-            "\textbf{end_node_id}": <int>,
-            "edge_length": <float>,
-            "max_speed": <float>,
-            "max_capacity": <int | Infinity>
-        \},
-        ...
-    ]
-\}
-\end{alltt}
-
-
-\subsection{Car object format}
-
-\begin{alltt}
-\{
-    "car_list": [
-        \{
-            "\textbf{id}": <int>,
-            "\textbf{start_edge}": <int>, 
-            "start_pos_meter": <float>, 
-            "\textbf{end_edge}": <int>,
-            "end_pos_meter": <float>,
-            "path": <list of consecutive edge ids>,
-            "car_length": <float>, 
-            "car_type": <"Static" | "Dynamic">,
-            "route_preference": <"Shortest" | "Fastest" | 
-                                 "Random">,
-            "max_tick_potential": <0 < float ≤ 1>
-        \},
-        ...
-    ]
-\}
-\end{alltt}
 
 \subsection{Object creation}
 
@@ -106,22 +60,11 @@
 
 \noindent If we decided to create cars manually instead, we could use the DEFAULT car config file to to batch out the creation of two car types:  cars (who travel like normal), and trucks (who drive 10\% slower, which translates to setting a default max\_tick\_potential to 0.9).
 
-
-
 \section{Set up a new simulation environment and translate the scope to code }
 
 \par The \textbf{Traffic} module serves as an API into the simulation controls; to use \textbf{Traffic} and either of the optional generator modules in the Traffic Network Simulator, the user must import them into their workspace. \\
 
-\par Set up a new python file with the following (or something similar), downloading/installing the modules and (default) config directory associated with this software:
-
-\begin{alltt}
-from \textbf{Traffic} import \textbf{TrafficManager}
-\textbf{import} json
-
-# and these two if needed:
-from \textbf{configs.UnderlyingNetworkGenerator} import \textbf{NetworkGenerator} 
-from \textbf{CarGenerator} import \textbf{*}      # if needed
-\end{alltt}
+\par Set up a new python file with the following (or something similar), downloading/installing the modules and (default) config directory associated with this software. \\
 
 \par In your working file, use relevant calls to the \textbf{Traffic} API to build your simulation.  Generally, this includes building a script that calls for a certain amount of ticks, adding cars at relevant points along the way.  For more complex simulations, the user may want to use commands to pause or resume the motion of particular cars (simulating traffic accidents) or prevent access to entire roads/sections of the network.  Please refer to the \autoref{Appendix}, \textit{"\nameref{Appendix}"}, for a full list of API commands available in the current software version. \\
 
@@ -135,62 +78,7 @@ from \textbf{CarGenerator} import \textbf{*}      # if needed
     \item Store network snapshots.  One snapshot per tick may be excessive, but a snapshot every minute may be reasonable.  This could translate to grabbing a snapshot every 60 ticks.
 \end{itemize}
 
-\noindent To translate that into code, we may write the following:
-
-\begin{alltt}
-from \textbf{Traffic} import \textbf{TrafficManager}
-\textbf{import} json
-
-if __name__ == "__main__":
-
-    # import configs
-    network_config_original = None
-    try:
-        with open("./configs/road_data.json") as 
-                  original_json_file: 
-            network_config_original = json.load(
-                                      original_json_file)
-    except Exception as E:
-        print(E)
-        
-    network_config_newlane = None
-    try:
-        with open("./configs/road_data_extralane.json") as 
-                  newlane_json_file: 
-            network_config_newlane = json.load(newlane_json_file)
-    except Exception as E:
-        print(E)
-
-    car_config = None
-    try:
-        with open("./configs/generated_cars.json") as car_file:  
-            car_config = json.load(car_file)
-    except Exception as E:
-        print(E)
-        
-    # batch cars
-    cars_batch_1 = car_config["car_list"][0:400]
-    cars_batch_2 = car_config["car_list"][400:1200]
-    # ...etc
-    
-    # set up the 2 simulations
-    tm_original = TrafficManager(network_config_original)
-    tm_newlane = TrafficManager(network_config_newlane)
-    
-    # advance timestamps for simulation 1, adding cars when 
-           necessary, outputting snapshots when necessary
-    for car in cars_batch_1:
-        tm_original.add_car(car)
-    for tick in range(1800):     # 30 min
-        tm_original.tick()
-        if tick \% 60 == 0:
-            with open(str(tm_original.get_timestamp()) + 
-                          '_snapshot.json', 'w') as f:
-                json.dump(tm_original.get_snapshot(), f)
-    
-    # ...etc for remaining car and time batches
-    #  repeat "advance timestamps" for tm_newlane
-\end{alltt}
+\noindent To translate these steps to code, we can loop TrafficManager.tick() for as many ticks are needed between snapshot dumps (TrafficManager.get\_snapshot()) and car additions (TrafficManager.add\_car(Car\_ID)).  For an example Simulation working file, refer to \autoref{SampleCode} (Appendix).
 
 
 \section{Interpret the simulation outputs}
