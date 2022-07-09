@@ -96,14 +96,14 @@ Further continuing with intuitive design decision, it followed that the network 
 
 \par However, cars do not spawn in the middle of a four-way intersection, nor does it make sense to create a network model where every possible parallel parking spot is a separate node in a network.  For one, someone could do a terrible parking job and take up two spots, therefore creating some new start or end node somewhere between the existing spots.  But the more pressing issue with breaking a road into n continuous, sequential, connected segments is the same sort of unwanted inefficiency as the adjacency matrices proposed earlier:  there's a lot space and computation wasted on pairs that generally provide no function to the simulation. \\
 
-\par This led me to turn the usual graph structure on its head, and instead allow cars to enter and leave the network from the edges themselves.  To make this work for traditional node-to-node paths, the car placement mechanism has been written in such a way that if no specific edge location has been specified for a start and end point, a path is selected based on those nodes and the "car" is placed at position 0 along the first edge (and finishes its journey at the maximum length of the final edge, or effectively at the terminal node). \\
+\par This led to design decision to turn the usual graph structure on its head, and instead allow cars to enter and leave the network from the edges themselves.  To make this work for traditional node-to-node paths, the car placement mechanism has been written in such a way that if no specific edge location has been specified for a start and end point, a path is selected based on those nodes and the "car" is placed at position 0 along the first edge (and finishes its journey at the maximum length of the final edge, or effectively at the terminal node). \\
 
 \par Since start and end locations have been set to edges, path finding calculations also are done on an edge to edge basis.  As edges only know their bounding nodes (and nodes their adjacent edges), calculations are done on the network level, allowing chaining between edge dictionaries of nodes and node dictionaries of edges to build potential paths.
 
 
 \section{How do cars move along their path?}
 
-\par A simulation is practically useless unless it models the movement of objects predictably and (semi-)realistically; the problem of how to model node-crossing caused me quite some consternation. \\
+\par A simulation is practically useless unless it models the movement of objects predictably and (semi-)realistically; the problem of how to model node-crossing caused quite some consternation. \\
 
 \par  For an intersection consisting of one inbound edge and one outbound edge, the logic is simple:  when a car reaches the end of one edge, check the following edge and place it there if there is room.  Even in the simple scenario, there are certain complexities that arise when translating that from math theory to computer code, and compound when adding more degrees of freedom by adding more inbound and outbound edges: 
 
@@ -161,4 +161,4 @@ Further continuing with intuitive design decision, it followed that the network 
 
 \par Though the random factor prevents a truly reproducible simulation, simulation snapshot output has been designed in such a format that it can also serve as config file \textit{input} for later simulation.  This provides continuity between all files associated with the simulation and makes it easier to recover the simulation and its output in case of machine failure/crashing. \\
 
-\par Snapshots output a human-readable dump of the entire simulation state, including all details on cars, edges, and nodes.  It was important to me that the user be able to obtain these snapshots whenever they like, allowing the flexibility to save every single tick state (and maybe dump to a database for detailed analysis), or only final or important interim states if desired.
+\par Snapshots output a human-readable dump of the entire simulation state, including all details on cars, edges, and nodes.  It was deemed essential that the user be able to obtain these snapshots whenever they like, allowing the flexibility to save every single tick state (and maybe dump to a database for detailed analysis), or choose only final or important interim states if desired.

@@ -1,7 +1,7 @@
-\chapter{User Manual}
+\chapter{Using the Network Traffic Simulator}
 \label{Manual}
 
-\par This chapter illustrates how the traffic simulator software works by guiding the reader through one hypothetical road-traffic simulation step by step in sections 5.1 through 5.5.  Though automotive traffic is used for the example case, instances where the given car simulation may differ from other types of network simulations have been highlighted. \\
+\par This chapter illustrates how the traffic simulator software works by guiding the reader through one hypothetical road-traffic simulation step by step in sections 5.1 through 5.4.  Though automotive traffic is used for the example case, instances where the given car simulation may differ from other types of network simulations have been highlighted. \\
 
 \section{Define the scope of the simulation}
 
@@ -34,7 +34,7 @@
 
 \par Users feed information into the simulation by providing specially-formatted objects (json or otherwise).  A complete view of the file format can be found in \autoref{Configs} (Appendix), but the main thing to note is that very few fields are mandatory. \\
 
-\par The Network config file consists of two parts:  Node list and Edge list.  The only mandatory field for Nodes is the \textit{id} as a unique identifier, but users may also add details on stoplights/passage gates (if applicable).  Edges have a few more required attributes (\textit{id}, \textit{start\_node\_id}, \textit{end\_node\_id}), but also allow the user to specify conditions for metering like speed and maximum capacity.  Real-world simulations will typically require the user to specify \textit{edge_length} as well, though the simulation will run regardless, defaulting to equal-length edges (if none specified).
+\par The Network config file consists of two parts:  Node list and Edge list.  The only mandatory field for Nodes is the \textit{id} as a unique identifier, but users may also add details on stoplights/passage gates (if applicable).  Edges have a few more required attributes (\textit{id}, \textit{start\_node\_id}, \textit{end\_node\_id}), but also allow the user to specify conditions for metering like speed and maximum capacity.  Real-world simulations will typically require the user to specify \textit{edge\_length} as well, though the simulation will run regardless, defaulting to equal-length edges (if none specified).
 
 
 \subsection{Object creation}
